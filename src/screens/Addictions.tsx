@@ -21,7 +21,7 @@ function Addictions() {
         if (savedLastCheckIn) setLastCheckIn(new Date(savedLastCheckIn));
     }, []);
 
-    const handleCheckIn = (stayedClean) => {
+    const handleCheckIn = (stayedClean: boolean) => {
         const today = new Date();
         const newCheckIns = [...checkIns, { date: today, stayedClean }];
         setCheckIns(newCheckIns);

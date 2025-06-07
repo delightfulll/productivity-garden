@@ -243,7 +243,7 @@
 
 /* Calendar Styles */
 .calendar-container {
-    @apply flex gap-8 items-start;
+    @apply flex gap-8 items-start py-5;
 }
 
 .custom-calendar {
@@ -505,167 +505,6 @@
   padding-right: 1rem;
 }
 
-.calendar-column {
-  width: 400px;
-  flex-shrink: 0;
-  background: var(--card-bg);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  height: fit-content;
-  position: sticky;
-  top: 2rem;
-}
-
-/* Adjust calendar styles for the sidebar */
-.calendar-column .calendar-container {
-  flex-direction: column;
-}
-
-.calendar-column .custom-calendar {
-  width: 100%;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-.calendar-column .tasks-container {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.calendar-column .tasks-title {
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-}
-
-.calendar-column .time-slot {
-  margin-bottom: 1rem;
-}
-
-.calendar-column .time-slot-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.calendar-column .time-slot-task {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .home-layout {
-    flex-direction: column;
-  }
-
-  .calendar-column {
-    width: 100%;
-    position: static;
-    margin-top: 2rem;
-  }
-
-  .tasks-column {
-    padding-right: 0;
-  }
-}
-
-/* FullCalendar Customization */
-.custom-calendar {
-  background: var(--card-bg) !important;
-  border: none !important;
-  border-radius: 1rem !important;
-  padding: 1rem !important;
-  font-family: inherit !important;
-}
-
-.custom-calendar .fc {
-  background: transparent !important;
-}
-
-.custom-calendar .fc-toolbar {
-  margin-bottom: 1.5rem !important;
-  flex-wrap: wrap !important;
-  gap: 1rem !important;
-}
-
-.custom-calendar .fc-toolbar-title {
-  font-size: 1.25rem !important;
-  font-weight: 600 !important;
-  color: var(--text-primary) !important;
-}
-
-.custom-calendar .fc-button {
-  background: var(--primary-color) !important;
-  border: none !important;
-  padding: 0.5rem 1rem !important;
-  font-size: 0.9rem !important;
-  font-weight: 500 !important;
-  border-radius: 0.5rem !important;
-  transition: all 0.2s ease !important;
-}
-
-.custom-calendar .fc-button:hover {
-  background: var(--primary-color-dark) !important;
-  transform: translateY(-1px) !important;
-}
-
-.custom-calendar .fc-button:active {
-  transform: translateY(0) !important;
-}
-
-.custom-calendar .fc-button-primary:not(:disabled).fc-button-active,
-.custom-calendar .fc-button-primary:not(:disabled):active {
-  background: var(--primary-color-dark) !important;
-  box-shadow: none !important;
-}
-
-.custom-calendar .fc-daygrid-day {
-  background: transparent !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 0.5rem !important;
-  margin: 2px !important;
-  transition: all 0.2s ease !important;
-}
-
-.custom-calendar .fc-daygrid-day:hover {
-  background: var(--hover-color) !important;
-  transform: translateY(-1px) !important;
-}
-
-.custom-calendar .fc-daygrid-day-number {
-  color: var(--text-primary) !important;
-  text-decoration: none !important;
-  padding: 0.5rem !important;
-  font-size: 0.9rem !important;
-}
-
-.custom-calendar .fc-day-today {
-  background: var(--hover-color) !important;
-}
-
-.custom-calendar .fc-daygrid-day.fc-day-today {
-  background: var(--hover-color) !important;
-}
-
-.custom-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  color: var(--primary-color) !important;
-  font-weight: 600 !important;
-}
-
-.calendar-day-event {
-  background: transparent !important;
-  border: none !important;
-}
-
-.calendar-status {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-}
 
 .status-icon {
   font-size: 1.2rem;
@@ -681,19 +520,6 @@
   color: var(--error-color);
 }
 
-/* Calendar Column Adjustments */
-.calendar-column .calendar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.calendar-column .custom-calendar {
-  width: 100%;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
 
 /* Home Header Layout */
 .home-header {
@@ -709,75 +535,6 @@
   flex: 1;
 }
 
-/* Calendar Box */
-.calendar-box {
-  width: 350px;
-  background: var(--card-bg);
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  right: 2rem;
-  top: 2rem;
-  z-index: 10;
-}
-
-.calendar-box .calendar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.calendar-box .custom-calendar {
-  width: 100%;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-.calendar-box .fc {
-  font-size: 0.9rem;
-}
-
-.calendar-box .fc-toolbar {
-  margin-bottom: 1rem !important;
-}
-
-.calendar-box .fc-toolbar-title {
-  font-size: 1.1rem !important;
-}
-
-.calendar-box .fc-button {
-  padding: 0.4rem 0.8rem !important;
-  font-size: 0.8rem !important;
-}
-
-.calendar-box .fc-daygrid-day {
-  min-height: 2.5rem !important;
-}
-
-.calendar-box .fc-daygrid-day-number {
-  font-size: 0.8rem !important;
-  padding: 0.3rem !important;
-}
-
-.calendar-box .tasks-container {
-  display: none;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .home-header {
-    flex-direction: column;
-    max-width: 100%;
-  }
-
-  .calendar-box {
-    position: static;
-    width: 100%;
-    margin-top: 1rem;
-  }
-}
 
 @keyframes taskCompleteHighlight {
     0% {
@@ -818,118 +575,22 @@
     }
 }
 
-.calendar-wrapper {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  padding: 0;
-  max-width: 350px;
-  margin: 0 auto;
-  border: 1px solid #e5e7eb;
+.calendar-container {
+  @apply flex flex-col gap-2 p-4 bg-gray-100;
 }
 
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.2rem 0.5rem 1.2rem;
-  border-bottom: 1px solid #e5e7eb;
+.calendar-controls button {
+  @apply bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium border-2 border-green-400 p-3 text-lg cursor-pointer;
 }
 
-.calendar-title {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.calendar-close {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1rem;
-  cursor: pointer;
+.calendar-controls button:hover {
+  @apply bg-green-600;
 }
 
 .react-calendar {
-  border: none;
-  font-family: inherit;
-  width: 100%;
-  padding: 0 1.2rem 1rem 1.2rem;
-  background: none;
+  @apply w-[350px] h-[350px] rounded-lg shadow-md;
+  background-color: rgb(146, 249, 131) !important;
+  border-radius: 14px;
+  border-color: rgb(28, 231, 21) !important;
 }
 
-.react-calendar__navigation {
-  margin-bottom: 0.5rem;
-}
-
-.react-calendar__navigation button {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #222;
-  font-weight: 500;
-  padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.react-calendar__navigation button:enabled:hover {
-  background: #f3f4f6;
-}
-
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  text-transform: none;
-  color: #a1a1aa;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.react-calendar__month-view__days__day {
-  font-size: 1.1rem;
-  border-radius: 8px;
-  height: 2.5rem;
-  width: 2.5rem;
-  margin: 0.1rem;
-  transition: background 0.2s, color 0.2s;
-}
-
-.react-calendar__tile--active,
-.calendar-today {
-  background: #2563eb !important;
-  color: #fff !important;
-  border-radius: 8px;
-}
-
-.calendar-sunday {
-  color: #ef4444 !important;
-}
-
-.react-calendar__tile:enabled:hover {
-  background: #e0e7ff;
-}
-
-.calendar-nav-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.2rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.calendar-nav-buttons button {
-  border: 2px solid #222;
-  background: #fff;
-  color: #222;
-  font-size: 1rem;
-  border-radius: 8px;
-  padding: 0.7rem 0;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.calendar-nav-buttons .active,
-.calendar-nav-buttons button:active {
-  background: #222;
-  color: #fff;
-}

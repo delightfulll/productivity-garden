@@ -1,98 +1,118 @@
-import React, { useState, useRef, useEffect } from 'react'
-import '../App.css'
-import Sidebar from '../components/Sidebar'
-import { motion, Reorder, AnimatePresence } from 'framer-motion'
-import { FaPlus, FaGripVertical } from 'react-icons/fa'
-import Confetti from 'react-confetti'
-import '../index.css'
+import React, { useState, useRef, useEffect } from "react";
+import "../App.css";
+import Sidebar from "../components/Sidebar";
+import { motion, Reorder, AnimatePresence } from "framer-motion";
+import { FaPlus, FaGripVertical } from "react-icons/fa";
+import "../index.css";
+import CustomCalendar from "../components/calendar";
 
 function Home() {
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 })
-  const [completedTaskId, setCompletedTaskId] = useState(null)
-  const taskRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const [completedTaskId, setCompletedTaskId] = useState<number | null>(null);
+  const taskRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
-  })
+  });
 
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
-      })
-    }
+      });
+    };
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const [wateringTasks, setWateringTasks] = useState([
-    { id: 1, text: "Complete project proposal", date: "Due Today", completed: false },
-    { id: 2, text: "Review pull requests", date: "Due Tomorrow", completed: false },
-    { id: 3, text: "Update documentation", date: "Due in 2 days", completed: false }
-  ])
+    {
+      id: 1,
+      text: "Complete project proposal",
+      date: "Due Today",
+      completed: false,
+    },
+    {
+      id: 2,
+      text: "Review pull requests",
+      date: "Due Tomorrow",
+      completed: false,
+    },
+    {
+      id: 3,
+      text: "Update documentation",
+      date: "Due in 2 days",
+      completed: false,
+    },
+  ]);
 
   const [sunlightTasks, setSunlightTasks] = useState([
     { id: 1, text: "Morning meditation", date: "Daily", completed: false },
     { id: 2, text: "Read for 30 minutes", date: "Daily", completed: false },
-    { id: 3, text: "Evening reflection", date: "Daily", completed: false }
-  ])
+    { id: 3, text: "Evening reflection", date: "Daily", completed: false },
+  ]);
 
   const [compostingTasks, setCompostingTasks] = useState([
-    { id: 1, text: "Clean email inbox", date: "When possible", completed: false },
+    {
+      id: 1,
+      text: "Clean email inbox",
+      date: "When possible",
+      completed: false,
+    },
     { id: 2, text: "Organize desk", date: "When possible", completed: false },
-    { id: 3, text: "Update software", date: "When possible", completed: false }
-  ])
+    { id: 3, text: "Update software", date: "When possible", completed: false },
+  ]);
 
-  const handleTaskComplete = (taskId, category) => {
-    const updateTasks = (tasks) => 
-      tasks.map(task => 
+  const handleTaskComplete = (taskId: number, category: string) => {
+    const updateTasks = (tasks: any[]) =>
+      tasks.map((task: any) =>
         task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+      );
 
     // Get the position of the completed task before updating state
-    const taskElement = taskRefs.current[taskId]
+    const taskElement = taskRefs.current[taskId];
     if (taskElement) {
-      const rect = taskElement.getBoundingClientRect()
+      const rect = taskElement.getBoundingClientRect();
       setConfettiPosition({
         x: rect.left,
-        y: rect.top
-      })
-      setCompletedTaskId(taskId)
-      setShowConfetti(true)
+        y: rect.top,
+      });
+      setCompletedTaskId(taskId);
+      setShowConfetti(true);
 
       // Update the task state after setting confetti position
-      switch(category) {
-        case 'watering':
-          setWateringTasks(updateTasks(wateringTasks))
-          break
-        case 'sunlight':
-          setSunlightTasks(updateTasks(sunlightTasks))
-          break
-        case 'composting':
-          setCompostingTasks(updateTasks(compostingTasks))
-          break
+      switch (category) {
+        case "watering":
+          setWateringTasks(updateTasks(wateringTasks));
+          break;
+        case "sunlight":
+          setSunlightTasks(updateTasks(sunlightTasks));
+          break;
+        case "composting":
+          setCompostingTasks(updateTasks(compostingTasks));
+          break;
       }
 
       // Clear the confetti after animation
       setTimeout(() => {
-        setShowConfetti(false)
+        setShowConfetti(false);
         // Only clear the completedTaskId if it's still the same task
-        setCompletedTaskId(prevId => prevId === taskId ? null : prevId)
-      }, 3000)
+        setCompletedTaskId((prevId) => (prevId === taskId ? null : prevId));
+      }, 3000);
     }
-  }
+  };
 
-  const TaskItem = ({ task, category }) => (
+  const TaskItem = ({ task, category }: { task: any; category: string }) => (
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={`task-item ${task.completed ? 'task-completed' : ''}`}
-      ref={el => {
+      className={`task-item ${task.completed ? "task-completed" : ""}`}
+      ref={(el) => {
         if (el) {
           taskRefs.current[task.id] = el;
         }
@@ -112,27 +132,32 @@ function Home() {
         onChange={() => handleTaskComplete(task.id, category)}
         whileTap={{ scale: 0.9 }}
       />
-      <span className={`task-text ${task.completed ? 'completed' : ''}`}>
+      <span className={`task-text ${task.completed ? "completed" : ""}`}>
         {task.text}
       </span>
-      <span className="task-date">
-        {task.date}
-      </span>
+      <span className="task-date">{task.date}</span>
     </motion.div>
-  )
+  );
 
   return (
     <div className="app-container">
       <AnimatePresence>
-        {showConfetti && (
-          <motion.div 
+        {
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1000 }}
-          >
-          </motion.div>
-        )}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 1000,
+            }}
+          ></motion.div>
+        }
       </AnimatePresence>
       <Sidebar />
 
@@ -141,7 +166,7 @@ function Home() {
         <div className="content-container">
           <div className="home-header">
             <div className="welcome-section">
-              <motion.h2 
+              <motion.h2
                 className="content-title"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -149,7 +174,7 @@ function Home() {
               >
                 Welcome Back, Vinay
               </motion.h2>
-              <motion.p 
+              <motion.p
                 className="content-text"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -157,7 +182,7 @@ function Home() {
               >
                 Let the flowers blossom today!
               </motion.p>
-              <motion.p 
+              <motion.p
                 className="content-text"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -169,7 +194,7 @@ function Home() {
           </div>
 
           {/* Rest of the content */}
-          <motion.h2 
+          <motion.h2
             className="content-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -177,7 +202,7 @@ function Home() {
           >
             Watering Tasks
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="content-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -185,9 +210,9 @@ function Home() {
           >
             These tasks move the needle
           </motion.p>
-          <Reorder.Group 
-            axis="y" 
-            values={wateringTasks} 
+          <Reorder.Group
+            axis="y"
+            values={wateringTasks}
             onReorder={setWateringTasks}
             className="task-box"
           >
@@ -196,16 +221,16 @@ function Home() {
                 <Reorder.Item
                   key={task.id}
                   value={task}
-                  whileDrag={{ 
+                  whileDrag={{
                     scale: 1.03,
-                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)"
+                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                   }}
                 >
                   <TaskItem task={task} category="watering" />
                 </Reorder.Item>
               ))}
             </AnimatePresence>
-            <motion.div 
+            <motion.div
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -215,7 +240,7 @@ function Home() {
             </motion.div>
           </Reorder.Group>
 
-          <motion.h2 
+          <motion.h2
             className="content-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -223,7 +248,7 @@ function Home() {
           >
             Sunlight Tasks
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="content-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -231,9 +256,9 @@ function Home() {
           >
             These tasks keep your goal alive
           </motion.p>
-          <Reorder.Group 
-            axis="y" 
-            values={sunlightTasks} 
+          <Reorder.Group
+            axis="y"
+            values={sunlightTasks}
             onReorder={setSunlightTasks}
             className="task-box"
           >
@@ -242,16 +267,16 @@ function Home() {
                 <Reorder.Item
                   key={task.id}
                   value={task}
-                  whileDrag={{ 
+                  whileDrag={{
                     scale: 1.03,
-                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)"
+                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                   }}
                 >
                   <TaskItem task={task} category="sunlight" />
                 </Reorder.Item>
               ))}
             </AnimatePresence>
-            <motion.div 
+            <motion.div
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -261,7 +286,7 @@ function Home() {
             </motion.div>
           </Reorder.Group>
 
-          <motion.h2 
+          <motion.h2
             className="content-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -269,7 +294,7 @@ function Home() {
           >
             Composting
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="content-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -277,9 +302,9 @@ function Home() {
           >
             These tasks are extraneous things not necessarily important
           </motion.p>
-          <Reorder.Group 
-            axis="y" 
-            values={compostingTasks} 
+          <Reorder.Group
+            axis="y"
+            values={compostingTasks}
             onReorder={setCompostingTasks}
             className="task-box"
           >
@@ -288,28 +313,33 @@ function Home() {
                 <Reorder.Item
                   key={task.id}
                   value={task}
-                  whileDrag={{ 
+                  whileDrag={{
                     scale: 1.03,
-                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)"
+                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                   }}
                 >
                   <TaskItem task={task} category="composting" />
                 </Reorder.Item>
               ))}
             </AnimatePresence>
-            <motion.div 
+            <motion.div
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <FaPlus className="add-task-plus" />
-              <span className="add-task-input">Add a new composting task...</span>
+              <span className="add-task-input">
+                Add a new composting task...
+              </span>
             </motion.div>
           </Reorder.Group>
         </div>
       </div>
+      <div className="calendar-container">
+        <CustomCalendar />
+      </div>
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;

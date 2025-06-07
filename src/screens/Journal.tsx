@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../App.css'
-import Modal from 'react-modal'
 import Sidebar from '../components/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaPen, FaTimes, FaSave } from 'react-icons/fa'
-
-// Initialize Modal
-Modal.setAppElement('#root')
+import Modal from 'react-modal'
 
 function Journal() {
     const [isModalOpen, setIsModalOpen] = useState(false)
