@@ -30,7 +30,7 @@ A beautiful productivity app that helps you organize your tasks into three categ
 git clone [your-repo-url]
 ```
 
-2. Install dependencies
+2. Install node dependencies
 
 ```bash
 npm install
