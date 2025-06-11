@@ -5,10 +5,13 @@ import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { FaPlus, FaGripVertical } from "react-icons/fa";
 import "../index.css";
 import CustomCalendar from "../components/calendar";
-
+import CelebrationParticles from "../components/CelebrationParticles";
 function Home() {
   const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const [confettiPosition, setConfettiPosition] = useState({
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  });
   const [completedTaskId, setCompletedTaskId] = useState<number | null>(null);
   const taskRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [windowSize, setWindowSize] = useState({
@@ -67,23 +70,18 @@ function Home() {
   ]);
 
   const handleTaskComplete = (taskId: number, category: string) => {
-    const updateTasks = (tasks: any[]) =>
-      tasks.map((task: any) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      );
-
     // Get the position of the completed task before updating state
     const taskElement = taskRefs.current[taskId];
     if (taskElement) {
       const rect = taskElement.getBoundingClientRect();
-      setConfettiPosition({
-        x: rect.left,
-        y: rect.top,
-      });
-      setCompletedTaskId(taskId);
-      setShowConfetti(true);
 
-      // Update the task state after setting confetti position
+      // Batch state updates
+      const updateTasks = (tasks: any[]) =>
+        tasks.map((task: any) =>
+          task.id === taskId ? { ...task, completed: !task.completed } : task
+        );
+
+      // Update all states at once
       switch (category) {
         case "watering":
           setWateringTasks(updateTasks(wateringTasks));
@@ -96,21 +94,28 @@ function Home() {
           break;
       }
 
-      // Clear the confetti after animation
-      setTimeout(() => {
-        setShowConfetti(false);
-        // Only clear the completedTaskId if it's still the same task
-        setCompletedTaskId((prevId) => (prevId === taskId ? null : prevId));
-      }, 3000);
+      // Set confetti position and trigger after task update
+      requestAnimationFrame(() => {
+        setConfettiPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2 - 80,
+        });
+        setShowConfetti(true);
+
+        // Clear the confetti after animation
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 2000);
+      });
     }
   };
 
   const TaskItem = ({ task, category }: { task: any; category: string }) => (
     <motion.div
-      layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
       className={`task-item ${task.completed ? "task-completed" : ""}`}
       ref={(el) => {
         if (el) {
@@ -141,6 +146,10 @@ function Home() {
 
   return (
     <div className="app-container">
+      <CelebrationParticles
+        trigger={showConfetti}
+        position={confettiPosition}
+      />
       <AnimatePresence>
         {
           <motion.div
@@ -215,8 +224,9 @@ function Home() {
             values={wateringTasks}
             onReorder={setWateringTasks}
             className="task-box"
+            layoutScroll
           >
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {wateringTasks.map((task) => (
                 <Reorder.Item
                   key={task.id}
@@ -225,6 +235,7 @@ function Home() {
                     scale: 1.03,
                     boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                   }}
+                  transition={{ duration: 0.2 }}
                 >
                   <TaskItem task={task} category="watering" />
                 </Reorder.Item>
