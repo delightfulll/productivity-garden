@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
-import { FaPlus, FaGripVertical } from "react-icons/fa";
+import { FaPlus, FaGripVertical, FaSave, FaTimes } from "react-icons/fa";
 import "../styles/index.css";
 import CustomCalendar from "../components/calendar";
 import CelebrationParticles from "../components/CelebrationParticles";
+import Modal from "react-modal";
+
 function Home() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiPosition, setConfettiPosition] = useState({
@@ -69,6 +71,54 @@ function Home() {
     { id: 3, text: "Update software", date: "When possible", completed: false },
   ]);
 
+  // Load tasks from localStorage on component mount
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const savedWateringTasks = await localStorage.getItem("wateringTasks");
+        const savedSunlightTasks = await localStorage.getItem("sunlightTasks");
+        const savedCompostingTasks = await localStorage.getItem(
+          "compostingTasks"
+        );
+
+        if (savedWateringTasks)
+          setWateringTasks(JSON.parse(savedWateringTasks));
+        if (savedSunlightTasks)
+          setSunlightTasks(JSON.parse(savedSunlightTasks));
+        if (savedCompostingTasks)
+          setCompostingTasks(JSON.parse(savedCompostingTasks));
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    const saveTasks = async () => {
+      try {
+        await localStorage.setItem(
+          "wateringTasks",
+          JSON.stringify(wateringTasks)
+        );
+        await localStorage.setItem(
+          "sunlightTasks",
+          JSON.stringify(sunlightTasks)
+        );
+        await localStorage.setItem(
+          "compostingTasks",
+          JSON.stringify(compostingTasks)
+        );
+      } catch (error) {
+        console.error("Error saving tasks:", error);
+      }
+    };
+
+    saveTasks();
+  }, [wateringTasks, sunlightTasks, compostingTasks]);
+
   const handleTaskComplete = (taskId: number, category: string) => {
     // Get the position of the completed task before updating state
     const taskElement = taskRefs.current[taskId];
@@ -108,6 +158,49 @@ function Home() {
         }, 2000);
       });
     }
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newTaskText, setNewTaskText] = useState("");
+  const [newTaskDate, setNewTaskDate] = useState("");
+  const [activeCategory, setActiveCategory] = useState<
+    "watering" | "sunlight" | "composting" | null
+  >(null);
+
+  const handleAddTask = () => {
+    if (!newTaskText.trim() || !activeCategory) return;
+
+    const newTask = {
+      id: Date.now(),
+      text: newTaskText.trim(),
+      date: newTaskDate || "No date",
+      completed: false,
+    };
+
+    switch (activeCategory) {
+      case "watering":
+        setWateringTasks([...wateringTasks, newTask]);
+        break;
+      case "sunlight":
+        setSunlightTasks([...sunlightTasks, newTask]);
+        break;
+      case "composting":
+        setCompostingTasks([...compostingTasks, newTask]);
+        break;
+    }
+
+    // Reset form and close modal
+    setNewTaskText("");
+    setNewTaskDate("");
+    setIsModalOpen(false);
+    setActiveCategory(null);
+  };
+
+  const openAddTaskModal = (
+    category: "watering" | "sunlight" | "composting"
+  ) => {
+    setActiveCategory(category);
+    setIsModalOpen(true);
   };
 
   const TaskItem = ({ task, category }: { task: any; category: string }) => (
@@ -245,6 +338,7 @@ function Home() {
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => openAddTaskModal("watering")}
             >
               <FaPlus className="add-task-plus" />
               <span className="add-task-input">Add a new watering task...</span>
@@ -291,6 +385,7 @@ function Home() {
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => openAddTaskModal("sunlight")}
             >
               <FaPlus className="add-task-plus" />
               <span className="add-task-input">Add a new sunlight task...</span>
@@ -337,6 +432,7 @@ function Home() {
               className="add-task-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => openAddTaskModal("composting")}
             >
               <FaPlus className="add-task-plus" />
               <span className="add-task-input">
@@ -349,6 +445,87 @@ function Home() {
       <div className="calendar-container">
         <CustomCalendar />
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={() => {
+          setIsModalOpen(false);
+          setActiveCategory(null);
+        }}
+        className="task-modal-content"
+        overlayClassName="task-modal"
+        contentLabel="Add New Task"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
+          <div className="modal-header">
+            <h3 className="task-modal-title">
+              Add New{" "}
+              {activeCategory
+                ? activeCategory.charAt(0).toUpperCase() +
+                  activeCategory.slice(1)
+                : ""}{" "}
+              Task
+            </h3>
+            <motion.button
+              className="modal-close-button"
+              onClick={() => {
+                setIsModalOpen(false);
+                setActiveCategory(null);
+              }}
+              whileHover={{ rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <FaTimes />
+            </motion.button>
+          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <input
+              type="text"
+              className="task-input"
+              value={newTaskText}
+              onChange={(e) => setNewTaskText(e.target.value)}
+              placeholder="Enter task description..."
+            />
+            <input
+              type="text"
+              className="task-date-input"
+              value={newTaskDate}
+              onChange={(e) => setNewTaskDate(e.target.value)}
+              placeholder="Enter due date (optional)"
+            />
+            <div className="task-modal-buttons">
+              <motion.button
+                className="task-cancel-button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setActiveCategory(null);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                className="task-save-button"
+                onClick={handleAddTask}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaSave className="button-icon" />
+                Add Task
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      </Modal>
     </div>
   );
 }
