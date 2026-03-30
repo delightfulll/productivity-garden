@@ -5,9 +5,10 @@ import Journal from "./screens/Journal";
 import Wins from "./screens/Wins";
 import Journey from "./screens/Journey";
 import Addictions from "./screens/Addictions";
-import React from "react";
 import TimeBlocking from "./screens/timeblocking";
-import Timer from "./screens/timerscreen";
+import TimerScreen from "./screens/timerscreen";
+import Settings from "./screens/Settings";
+import Profile from "./screens/Profile";
 
 function App() {
   return (
@@ -19,7 +20,9 @@ function App() {
         <Route path="/journey" element={<Journey />} />
         <Route path="/addictions" element={<Addictions />} />
         <Route path="/timeblocking" element={<TimeBlocking />} />
-        <Route path="/timer" element={<Timer />} />
+        <Route path="/timer" element={<TimerScreen />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

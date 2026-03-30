@@ -8,10 +8,31 @@ import Modal from "react-modal";
 function Journal() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [journalEntry, setJournalEntry] = useState("");
-  const [entries, setEntries] = useState<string[]>([]);
+
+  //stores entries
+  const [entries, setEntries] = useState<
+    {
+      id: number;
+      entry: string;
+      date: string;
+    }[]
+  >([
+    {
+      id: 1,
+      entry: "This is a journal entry",
+      date: new Date().toLocaleDateString(),
+    },
+  ]);
+
+  //add entry
   const handleAddEntry = () => {
     if (journalEntry.trim()) {
-      setEntries([...entries, journalEntry]);
+      const newEntry = {
+        id: entries.length + 1,
+        entry: journalEntry,
+        date: new Date().toLocaleDateString(),
+      };
+      setEntries([...entries, newEntry]);
       setJournalEntry("");
       setIsModalOpen(false);
     }
@@ -46,19 +67,26 @@ function Journal() {
             <AnimatePresence>
               {entries.map((entry, index) => (
                 <motion.div
-                  key={entry}
-                  className="win-card"
+                  key={entry.id}
+                  className="add-win-card"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="flex flex-col">
-                    <span className="win-card-text">{entry}</span>
-                    <span className="journal-entry-date">
-                      {new Date().toLocaleDateString()}
-                    </span>
+                  <div className="add-win-card">
+                    <button
+                      className="win-card"
+                      onClick={() => {
+                        //has to click the actual text for it to open the modal
+                        setIsModalOpen(true);
+                        setJournalEntry(entry.entry);
+                      }}
+                    >
+                      {entry.entry}
+                    </button>
+                    <span className="journal-entry-date">{entry.date}</span>
                   </div>
                 </motion.div>
               ))}
@@ -84,7 +112,6 @@ function Journal() {
         </div>
       </div>
 
-      {/* React Modal */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}

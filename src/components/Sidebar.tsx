@@ -44,7 +44,7 @@ function Sidebar() {
           to="/timeblocking"
           className={({ isActive }) => `nav-button ${isActive ? "active" : ""}`}
         >
-          TimeBlocking
+          Time Blocking
         </NavLink>
         <NavLink
           to="/timer"
@@ -57,8 +57,18 @@ function Sidebar() {
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         <div className="nav-section">
-          <button className="nav-button">Settings</button>
-          <button className="nav-button">Profile</button>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => `nav-button ${isActive ? "active" : ""}`}
+          >
+            Settings
+          </NavLink>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) => `nav-button ${isActive ? "active" : ""}`}
+          >
+            Profile
+          </NavLink>
         </div>
       </div>
     </div>

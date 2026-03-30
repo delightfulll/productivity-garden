@@ -3,6 +3,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../styles/App.css";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import Focus from "./focus";
 
 type Value = Date | [Date, Date] | null;
 

@@ -21,6 +21,7 @@ function Addictions() {
     if (savedStreak) setStreak(parseInt(savedStreak));
     if (savedCheckIns) setCheckIns(JSON.parse(savedCheckIns));
     if (savedLastCheckIn) setLastCheckIn(new Date(savedLastCheckIn));
+
   }, []);
 
   const handleCheckIn = (stayedClean: boolean) => {
