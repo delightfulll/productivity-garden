@@ -4,52 +4,47 @@
 
 ---
 
-## ✨ Features
+## Features
 
-| | |
-|---|---|
-| 🌿 **Task Categories** | Organize tasks into Watering, Sunlight & Composting |
-| 🔥 **Streaks** | Track your daily consistency and build momentum |
-| 📅 **Calendar View** | Visualize your schedule at a glance |
-| 🎯 **Focus Timer** | Stay locked in with a built-in focus session |
-| 🧑‍🌾 **Profile & Stats** | Garden level, XP, wins, and activity log |
-| 🖱️ **Drag & Drop** | Reorder tasks with smooth animations |
-| ⚙️ **Settings** | Personalize your garden experience |
+|                     |                                                     |
+| ------------------- | --------------------------------------------------- |
+| **Task Categories** | Organize tasks into Watering, Sunlight & Composting |
+| **Streaks**         | Track your daily consistency and build momentum     |
+| **Calendar View**   | Visualize your schedule at a glance                 |
+| **Focus Timer**     | Stay locked in with a built-in focus session        |
+| **Profile & Stats** | Garden level, XP, wins, and activity log            |
+| **Drag & Drop**     | Reorder tasks with smooth animations                |
+| **Settings**        | Personalize your garden experience                  |
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 
-| Technology | Purpose |
-|---|---|
-| **React 19** | UI framework |
-| **TypeScript** | Type safety across the codebase |
-| **Vite** | Fast dev server & build tool |
-| **Tailwind CSS v4** | Utility-first styling |
-| **Framer Motion** | Animations & drag-and-drop |
-| **React Router v7** | Client-side navigation |
-| **React Icons** | Icon library |
-| **FullCalendar** | Interactive calendar component |
-| **React Modal** | Accessible modals |
-| **React Timer Hook** | Focus session timer |
-| **tsParticles** | Particle effects |
+| Technology          | Purpose                         |
+| ------------------- | ------------------------------- | --- |
+| **React**           | UI framework                    |
+| **TypeScript**      | Type safety across the codebase |
+| **Vite**            | Fast dev server & build tool    |
+| **Tailwind CSS v4** | Utility-first styling           |
+| **Framer Motion**   | Animations & drag-and-drop      |
+| **React Router v7** | Client-side navigation          |     |
 
 ### Backend
 
-| Technology | Purpose |
-|---|---|
-| **Node.js + Express 5** | REST API server |
-| **TypeScript** | Type-safe backend |
-| **PostgreSQL** | Primary database |
-| **node-postgres (pg)** | Postgres client |
-| **dotenv** | Environment variable management |
-| **cors** | Cross-origin request handling |
+| Technology              | Purpose                         |
+| ----------------------- | ------------------------------- |
+| **Node.js + Express 5** | REST API server                 |
+| **TypeScript**          | Type-safe backend               |
+| **PostgreSQL**          | Primary database                |
+| **node-postgres (pg)**  | Postgres client                 |
+| **dotenv**              | Environment variable management |
+| **cors**                | Cross-origin request handling   |
 
 ---
 
-## 🗂 Project Structure
+## Project Structure
 
 ```
 productivity-garden/
@@ -77,7 +72,7 @@ productivity-garden/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repo
 
@@ -125,16 +120,16 @@ npx tsx api.ts
 
 ## 🌐 API Overview
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Server health check |
-| `POST` | `/api/users` | Create a user |
-| `GET` | `/api/users/:id` | Get user profile |
-| `PUT` | `/api/users/:id` | Update profile |
-| `GET` | `/api/users/:id/stats` | Get stats & XP |
-| `PUT` | `/api/users/:id/stats` | Update stats |
-| `GET` | `/api/tasks?userId=` | Get all tasks |
-| `GET` | `/api/tasks?userId=&category=` | Filter by category |
-| `POST` | `/api/tasks` | Create a task |
-| `PUT` | `/api/tasks/:id` | Update a task |
-| `DELETE` | `/api/tasks/:id` | Delete a task |
+| Method   | Endpoint                       | Description         |
+| -------- | ------------------------------ | ------------------- |
+| `GET`    | `/health`                      | Server health check |
+| `POST`   | `/api/users`                   | Create a user       |
+| `GET`    | `/api/users/:id`               | Get user profile    |
+| `PUT`    | `/api/users/:id`               | Update profile      |
+| `GET`    | `/api/users/:id/stats`         | Get stats & XP      |
+| `PUT`    | `/api/users/:id/stats`         | Update stats        |
+| `GET`    | `/api/tasks?userId=`           | Get all tasks       |
+| `GET`    | `/api/tasks?userId=&category=` | Filter by category  |
+| `POST`   | `/api/tasks`                   | Create a task       |
+| `PUT`    | `/api/tasks/:id`               | Update a task       |
+| `DELETE` | `/api/tasks/:id`               | Delete a task       |
