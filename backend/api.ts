@@ -1,25 +1,23 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
-import { Pool } from "pg";
+
+import taskRoutes from "./routes/tasks";
+import userRoutes from "./routes/users";
 
 dotenv.config();
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432"),
-});
-
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
-//check health of the server
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
+
+app.use("/api/tasks", taskRoutes);
+app.use("/api/users", userRoutes);
 
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
