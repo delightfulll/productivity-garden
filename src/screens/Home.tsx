@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { tasksApi, type Task } from "../lib/api";
-import { motion, Reorder, AnimatePresence } from "framer-motion";
+import { motion, Reorder, AnimatePresence, LayoutGroup } from "framer-motion";
 import { FaPlus, FaGripVertical, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import "../styles/index.css";
 import CustomCalendar from "../components/calendar";
@@ -14,14 +14,14 @@ import GoalFocus from "../components/GoalFocus";
 type ActiveTab = "tasks" | "goals" | "backlog";
 
 interface TaskItemProps {
-  task: any;
+  task: Task;
   category: string;
-  onComplete: (taskId: number, category: string) => void;
+  onComplete: (taskId: number, category: string, currentCompleted: boolean) => void;
   onDelete: (taskId: number, category: string) => void;
   taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
-const TaskItem = ({ task, category, onComplete, onDelete, taskRefs }: TaskItemProps) => (
+const TaskItem = React.memo(({ task, category, onComplete, onDelete, taskRefs }: TaskItemProps) => (
   <motion.div
     className={`task-item ${task.completed ? "task-completed" : ""}`}
     ref={(el) => {
@@ -39,7 +39,7 @@ const TaskItem = ({ task, category, onComplete, onDelete, taskRefs }: TaskItemPr
       type="checkbox"
       className="task-checkbox"
       checked={task.completed}
-      onChange={() => onComplete(task.id, category)}
+      onChange={() => onComplete(task.id, category, task.completed)}
       whileTap={{ scale: 0.9 }}
     />
     <span className={`task-text ${task.completed ? "completed" : ""}`}>
@@ -56,7 +56,66 @@ const TaskItem = ({ task, category, onComplete, onDelete, taskRefs }: TaskItemPr
       <FaTrash />
     </motion.button>
   </motion.div>
-);
+));
+
+interface TaskSectionProps {
+  title: string;
+  subtitle: string;
+  tasks: Task[];
+  category: "watering" | "sunlight" | "composting";
+  onReorder: React.Dispatch<React.SetStateAction<Task[]>>;
+  onComplete: (taskId: number, category: string, currentCompleted: boolean) => void;
+  onDelete: (taskId: number, category: string) => void;
+  onAddClick: (category: "watering" | "sunlight" | "composting") => void;
+  taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
+}
+
+const TaskSection = React.memo(({
+  title, subtitle, tasks, category,
+  onReorder, onComplete, onDelete, onAddClick, taskRefs,
+}: TaskSectionProps) => (
+  <>
+    <h2 className="content-title" style={category !== "watering" ? { marginTop: "1.5rem" } : undefined}>{title}</h2>
+    <p className="content-text">{subtitle}</p>
+    <LayoutGroup id={category}>
+    <Reorder.Group
+      axis="y"
+      values={tasks}
+      onReorder={onReorder}
+      className="task-box"
+      layoutScroll
+    >
+      <AnimatePresence mode="popLayout">
+        {tasks.map((task) => (
+          <Reorder.Item
+            key={task.id}
+            value={task}
+            whileDrag={{ scale: 1.03, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" }}
+            transition={{ duration: 0.2 }}
+          >
+            <TaskItem
+              task={task}
+              category={category}
+              onComplete={onComplete}
+              onDelete={onDelete}
+              taskRefs={taskRefs}
+            />
+          </Reorder.Item>
+        ))}
+      </AnimatePresence>
+      <motion.div
+        className="add-task-card"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onAddClick(category)}
+      >
+        <FaPlus className="add-task-plus" />
+        <span className="add-task-input">Add a new {category} task...</span>
+      </motion.div>
+    </Reorder.Group>
+    </LayoutGroup>
+  </>
+));
 
 function Home() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("tasks");
@@ -97,35 +156,23 @@ function Home() {
     }).catch((err) => console.error("Failed to load tasks:", err));
   }, []);
 
-  const handleTaskComplete = (taskId: number, category: string) => {
+  const handleTaskComplete = useCallback((taskId: number, category: string, currentCompleted: boolean) => {
     const taskElement = taskRefs.current[taskId];
     if (!taskElement) return;
 
     const rect = taskElement.getBoundingClientRect();
+    const newCompleted = !currentCompleted;
 
     const updateTasks = (tasks: Task[]) =>
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      );
+      tasks.map((task) => task.id === taskId ? { ...task, completed: newCompleted } : task);
 
-    let currentCompleted = false;
     switch (category) {
-      case "watering":
-        currentCompleted = wateringTasks.find((t) => t.id === taskId)?.completed ?? false;
-        setWateringTasks(updateTasks(wateringTasks));
-        break;
-      case "sunlight":
-        currentCompleted = sunlightTasks.find((t) => t.id === taskId)?.completed ?? false;
-        setSunlightTasks(updateTasks(sunlightTasks));
-        break;
-      case "composting":
-        currentCompleted = compostingTasks.find((t) => t.id === taskId)?.completed ?? false;
-        setCompostingTasks(updateTasks(compostingTasks));
-        break;
+      case "watering":   setWateringTasks(updateTasks); break;
+      case "sunlight":   setSunlightTasks(updateTasks); break;
+      case "composting": setCompostingTasks(updateTasks); break;
     }
 
-    // Sync to API
-    tasksApi.update(taskId, { completed: !currentCompleted }).catch((err) =>
+    tasksApi.update(taskId, { completed: newCompleted }).catch((err) =>
       console.error("Failed to update task:", err)
     );
 
@@ -137,7 +184,7 @@ function Home() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2000);
     });
-  };
+  }, [taskRefs]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState("");
@@ -146,7 +193,7 @@ function Home() {
     "watering" | "sunlight" | "composting" | null
   >(null);
 
-  const handleAddTask = async () => {
+  const handleAddTask = useCallback(async () => {
     if (!newTaskText.trim() || !activeCategory) return;
 
     try {
@@ -157,9 +204,9 @@ function Home() {
       });
 
       switch (activeCategory) {
-        case "watering":  setWateringTasks([...wateringTasks, created]); break;
-        case "sunlight":  setSunlightTasks([...sunlightTasks, created]); break;
-        case "composting": setCompostingTasks([...compostingTasks, created]); break;
+        case "watering":   setWateringTasks((t) => [...t, created]); break;
+        case "sunlight":   setSunlightTasks((t) => [...t, created]); break;
+        case "composting": setCompostingTasks((t) => [...t, created]); break;
       }
     } catch (err) {
       console.error("Failed to create task:", err);
@@ -169,10 +216,9 @@ function Home() {
     setNewTaskDate("");
     setIsModalOpen(false);
     setActiveCategory(null);
-  };
+  }, [newTaskText, newTaskDate, activeCategory]);
 
-  const handleDeleteTask = async (taskId: number, category: string) => {
-    // Optimistic removal
+  const handleDeleteTask = useCallback(async (taskId: number, category: string) => {
     switch (category) {
       case "watering":   setWateringTasks((t) => t.filter((x) => x.id !== taskId)); break;
       case "sunlight":   setSunlightTasks((t) => t.filter((x) => x.id !== taskId)); break;
@@ -183,14 +229,14 @@ function Home() {
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
-  };
+  }, []);
 
-  const openAddTaskModal = (
+  const openAddTaskModal = useCallback((
     category: "watering" | "sunlight" | "composting",
   ) => {
     setActiveCategory(category);
     setIsModalOpen(true);
-  };
+  }, []);
 
   return (
     <div className="app-container">
@@ -262,126 +308,39 @@ function Home() {
           {/* Tab Content */}
           {activeTab === "tasks" && (
             <div>
-              <h2 className="content-title">Watering Tasks</h2>
-              <p className="content-text">These tasks move the needle</p>
-              <Reorder.Group
-                axis="y"
-                values={wateringTasks}
+              <TaskSection
+                title="Watering Tasks"
+                subtitle="These tasks move the needle"
+                tasks={wateringTasks}
+                category="watering"
                 onReorder={setWateringTasks}
-                className="task-box"
-                layoutScroll
-              >
-                <AnimatePresence mode="popLayout">
-                  {wateringTasks.map((task) => (
-                    <Reorder.Item
-                      key={task.id}
-                      value={task}
-                      whileDrag={{
-                        scale: 1.03,
-                        boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
-                      }}
-                      transition={{ duration: 0.2 }}
-                    >
-                        <TaskItem
-                          task={task}
-                          category="watering"
-                          onComplete={handleTaskComplete}
-                          onDelete={handleDeleteTask}
-                          taskRefs={taskRefs}
-                        />
-                    </Reorder.Item>
-                  ))}
-                </AnimatePresence>
-                <motion.div
-                  className="add-task-card"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => openAddTaskModal("watering")}
-                >
-                  <FaPlus className="add-task-plus" />
-                  <span className="add-task-input">Add a new watering task...</span>
-                </motion.div>
-              </Reorder.Group>
-
-              <h2 className="content-title" style={{ marginTop: "1.5rem" }}>Sunlight Tasks</h2>
-              <p className="content-text">These tasks keep your goal alive</p>
-              <Reorder.Group
-                axis="y"
-                values={sunlightTasks}
+                onComplete={handleTaskComplete}
+                onDelete={handleDeleteTask}
+                onAddClick={openAddTaskModal}
+                taskRefs={taskRefs}
+              />
+              <TaskSection
+                title="Sunlight Tasks"
+                subtitle="These tasks keep your goal alive"
+                tasks={sunlightTasks}
+                category="sunlight"
                 onReorder={setSunlightTasks}
-                className="task-box"
-              >
-                <AnimatePresence>
-                  {sunlightTasks.map((task) => (
-                    <Reorder.Item
-                      key={task.id}
-                      value={task}
-                      whileDrag={{
-                        scale: 1.03,
-                        boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                        <TaskItem
-                          task={task}
-                          category="sunlight"
-                          onComplete={handleTaskComplete}
-                          onDelete={handleDeleteTask}
-                          taskRefs={taskRefs}
-                        />
-                    </Reorder.Item>
-                  ))}
-                </AnimatePresence>
-                <motion.div
-                  className="add-task-card"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => openAddTaskModal("sunlight")}
-                >
-                  <FaPlus className="add-task-plus" />
-                  <span className="add-task-input">Add a new sunlight task...</span>
-                </motion.div>
-              </Reorder.Group>
-
-              <h2 className="content-title" style={{ marginTop: "1.5rem" }}>Composting</h2>
-              <p className="content-text">These tasks are extraneous things not necessarily important</p>
-              <Reorder.Group
-                axis="y"
-                values={compostingTasks}
+                onComplete={handleTaskComplete}
+                onDelete={handleDeleteTask}
+                onAddClick={openAddTaskModal}
+                taskRefs={taskRefs}
+              />
+              <TaskSection
+                title="Composting"
+                subtitle="These tasks are extraneous things not necessarily important"
+                tasks={compostingTasks}
+                category="composting"
                 onReorder={setCompostingTasks}
-                className="task-box"
-              >
-                <AnimatePresence>
-                  {compostingTasks.map((task) => (
-                    <Reorder.Item
-                      key={task.id}
-                      value={task}
-                      whileDrag={{
-                        scale: 1.03,
-                        boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                        <TaskItem
-                          task={task}
-                          category="composting"
-                          onComplete={handleTaskComplete}
-                          onDelete={handleDeleteTask}
-                          taskRefs={taskRefs}
-                        />
-                    </Reorder.Item>
-                  ))}
-                </AnimatePresence>
-                <motion.div
-                  className="add-task-card"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => openAddTaskModal("composting")}
-                >
-                  <FaPlus className="add-task-plus" />
-                  <span className="add-task-input">
-                    Add a new composting task...
-                  </span>
-                </motion.div>
-              </Reorder.Group>
+                onComplete={handleTaskComplete}
+                onDelete={handleDeleteTask}
+                onAddClick={openAddTaskModal}
+                taskRefs={taskRefs}
+              />
             </div>
           )}
 

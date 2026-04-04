@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { FaFire, FaCalendarCheck, FaChartLine } from "react-icons/fa";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
@@ -26,7 +26,7 @@ function Addictions() {
     try {
       const result = await addictionsApi.checkIn(stayedClean);
       setStreak(result.streak);
-      setCheckIns([...checkIns, result.checkin]);
+      setCheckIns((prev) => [...prev, result.checkin]);
     } catch (err) {
       console.error("Failed to save check-in:", err);
     }
@@ -38,83 +38,136 @@ function Addictions() {
     return (cleanDays / checkIns.length) * 100;
   };
 
+  const recentHistory = checkIns.slice(-7).reverse();
+
   return (
     <div className="app-container">
       <Sidebar />
 
       <div className="main-content">
         <div className="content-container">
-          <h2 className="content-title">Recovery Tracker</h2>
-          <p className="content-text">Track your progress and stay motivated</p>
 
-          <div className="stats-container">
+          {/* Page header */}
+          <div className="home-header" style={{ maxWidth: "100%", marginBottom: "1.75rem" }}>
+            <div className="welcome-section">
+              <motion.h2
+                className="content-title"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                Recovery Tracker
+              </motion.h2>
+              <motion.p
+                className="content-text"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                Track your progress and stay motivated — one day at a time.
+              </motion.p>
+            </div>
+          </div>
+
+          {/* Stat cards */}
+          <div className="recovery-stats-row">
             <motion.div
-              className="streak-card"
-              whileHover={{ scale: 1.05 }}
+              className="recovery-stat-card"
+              whileHover={{ scale: 1.02 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
             >
-              <FaFire className="streak-icon" />
-              <h2>{streak}</h2>
-              <p>Day Streak</p>
+              <FaFire className="recovery-stat-icon recovery-stat-icon-fire" />
+              <p className="recovery-stat-number">{streak}</p>
+              <p className="recovery-stat-label">Day Streak</p>
             </motion.div>
 
             <motion.div
-              className="progress-card"
-              whileHover={{ scale: 1.05 }}
+              className="recovery-stat-card"
+              whileHover={{ scale: 1.02 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.4 }}
             >
-              <FaChartLine className="progress-icon" />
-              <h2>{calculateProgress().toFixed(1)}%</h2>
-              <p>Success Rate</p>
+              <FaChartLine className="recovery-stat-icon recovery-stat-icon-chart" />
+              <p className="recovery-stat-number">{calculateProgress().toFixed(1)}%</p>
+              <p className="recovery-stat-label">Success Rate</p>
             </motion.div>
           </div>
 
-          <div className="check-in-container">
-            <h3>Daily Check-in</h3>
-            <p>Did you stay clean today?</p>
-            <div className="button-group">
+          {/* Daily check-in */}
+          <motion.div
+            className="recovery-checkin-card"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.26, duration: 0.4 }}
+          >
+            <p className="recovery-checkin-title">Daily Check-in</p>
+            <p className="recovery-checkin-sub">Did you stay clean today?</p>
+            <div className="recovery-checkin-buttons">
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                className="recovery-yes-button"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => handleCheckIn(true)}
-                className="yes-button"
               >
-                Yes, I stayed clean!
+                ✓ Yes, I stayed clean!
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                className="recovery-no-button"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => handleCheckIn(false)}
-                className="no-button"
               >
-                No, I slipped up
+                I slipped up
               </motion.button>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="history-container">
-            <h3>Recent History</h3>
-            <div className="history-list">
-              {checkIns
-                .slice(-7)
-                .reverse()
-                .map((check, index) => (
-                  <motion.div
-                    key={check.id}
-                    className={`history-item ${check.stayed_clean ? "clean" : "slipped"}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <FaCalendarCheck />
-                    <span>{new Date(check.checked_at).toLocaleDateString()}</span>
-                    <span>{check.stayed_clean ? "Stayed Clean" : "Slipped Up"}</span>
-                  </motion.div>
-                ))}
-            </div>
-          </div>
+          {/* Recent history */}
+          <motion.div
+            className="recovery-history-section"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.34, duration: 0.4 }}
+          >
+            <p className="recovery-history-heading">Recent History</p>
+
+            {recentHistory.length === 0 ? (
+              <div className="recovery-history-empty">
+                <span className="recovery-history-empty-icon">📋</span>
+                <p>No check-ins yet. Start today!</p>
+              </div>
+            ) : (
+              <div className="recovery-history-list">
+                <AnimatePresence>
+                  {recentHistory.map((check, index) => (
+                    <motion.div
+                      key={check.id}
+                      className={`recovery-history-item ${check.stayed_clean ? "recovery-history-clean" : "recovery-history-slipped"}`}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.06 }}
+                    >
+                      <FaCalendarCheck className="recovery-history-icon" />
+                      <span className="recovery-history-date">
+                        {new Date(check.checked_at).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                      <span className={`recovery-history-status ${check.stayed_clean ? "recovery-history-status-clean" : "recovery-history-status-slipped"}`}>
+                        {check.stayed_clean ? "Stayed Clean" : "Slipped Up"}
+                      </span>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+
         </div>
       </div>
     </div>

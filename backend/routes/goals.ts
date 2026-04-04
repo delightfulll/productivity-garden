@@ -3,7 +3,7 @@ import pool from "../db/db";
 
 const router = Router();
 
-// GET /api/goals?userId=1
+// Returns all goals for a user, ordered oldest-first
 router.get("/", async (req: Request, res: Response) => {
   const { userId } = req.query;
   if (!userId) { res.status(400).json({ error: "userId is required" }); return; }
@@ -20,8 +20,7 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/goals
-// Body: { user_id, title, description?, target_date? }
+// Creates a new goal; description and target_date default to empty string if omitted
 router.post("/", async (req: Request, res: Response) => {
   const { user_id, title, description, target_date } = req.body;
   if (!user_id || !title) { res.status(400).json({ error: "user_id and title are required" }); return; }
@@ -39,8 +38,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/goals/:id
-// Body: { title?, description?, target_date?, achieved? }
+// Partially updates a goal — only fields present in the request body are modified
 router.put("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, target_date, achieved } = req.body;
@@ -70,7 +68,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/goals/:id
+// Deletes a goal and returns the deleted record for confirmation
 router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {

@@ -1,142 +1,249 @@
-.addictions-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+/* ── Recovery Stat Cards ─────────────────────────────────────── */
+.recovery-stats-row {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
-.addictions-container h1 {
-    text-align: center;
-    color: #2d3748;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
+.recovery-stat-card {
+  flex: 1;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: default;
 }
 
-.stats-container {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    margin-bottom: 3rem;
+.recovery-stat-card:hover {
+  border-color: #86efac;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.08);
 }
 
-.streak-card, .progress-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    min-width: 200px;
-    transition: transform 0.3s ease;
+.recovery-stat-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.streak-icon, .progress-icon {
-    font-size: 2rem;
-    color: #4299e1;
-    margin-bottom: 1rem;
+.recovery-stat-icon-fire {
+  color: #f97316;
 }
 
-.streak-card h2, .progress-card h2 {
-    font-size: 2.5rem;
-    color: #2d3748;
-    margin: 0.5rem 0;
+.recovery-stat-icon-chart {
+  color: #22c55e;
 }
 
-.streak-card p, .progress-card p {
-    color: #718096;
-    margin: 0;
+.recovery-stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.1;
+  margin-bottom: 0.25rem;
 }
 
-.check-in-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    margin-bottom: 3rem;
+.recovery-stat-label {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.button-group {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 1.5rem;
+/* ── Daily Check-in Card ─────────────────────────────────────── */
+.recovery-checkin-card {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: box-shadow 0.2s;
 }
 
-.yes-button, .no-button {
-    padding: 1rem 2rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.recovery-checkin-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
 }
 
-.yes-button {
-    background: #48bb78;
-    color: white;
+.recovery-checkin-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.35rem;
 }
 
-.no-button {
-    background: #f56565;
-    color: white;
+.recovery-checkin-sub {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 1.25rem;
 }
 
-.history-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.recovery-checkin-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-.history-container h3 {
-    color: #2d3748;
-    margin-bottom: 1.5rem;
+.recovery-yes-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
 }
 
-.history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.recovery-yes-button:hover {
+  background: #16a34a;
 }
 
-.history-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: #f7fafc;
+.recovery-no-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  background: white;
+  color: #ef4444;
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.history-item.clean {
-    border-left: 4px solid #48bb78;
+.recovery-no-button:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
 }
 
-.history-item.slipped {
-    border-left: 4px solid #f56565;
+/* ── History Section ─────────────────────────────────────────── */
+.recovery-history-section {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
 }
 
-.history-item svg {
-    color: #718096;
+.recovery-history-section:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
 }
 
-.history-item span {
-    color: #4a5568;
+.recovery-history-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
 }
 
-/* Responsive Design */
+.recovery-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.recovery-history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 1rem;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  border-left-width: 4px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.recovery-history-item:hover {
+  background: white;
+}
+
+.recovery-history-clean {
+  border-left-color: #22c55e;
+}
+
+.recovery-history-slipped {
+  border-left-color: #ef4444;
+}
+
+.recovery-history-icon {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.recovery-history-date {
+  font-size: 0.88rem;
+  color: #374151;
+  font-weight: 500;
+  flex: 1;
+}
+
+.recovery-history-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+
+.recovery-history-status-clean {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.recovery-history-status-slipped {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ── History Empty State ─────────────────────────────────────── */
+.recovery-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2rem 1rem;
+  color: #9ca3af;
+  text-align: center;
+  font-size: 0.85rem;
+  border: 1.5px dashed #e5e7eb;
+  border-radius: 12px;
+}
+
+.recovery-history-empty-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.15rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 640px) {
-    .stats-container {
-        flex-direction: column;
-        align-items: center;
-    }
+  .recovery-stats-row {
+    flex-direction: column;
+  }
 
-    .button-group {
-        flex-direction: column;
-    }
+  .recovery-checkin-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-    .addictions-container {
-        padding: 1rem;
-    }
-} 
+  .recovery-yes-button,
+  .recovery-no-button {
+    justify-content: center;
+  }
+}

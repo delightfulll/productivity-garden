@@ -36,6 +36,18 @@ const CalendarGrid = () => {
     setDate(tomorrow);
   };
 
+  const isYesterday =
+    date instanceof Date &&
+    date.toDateString() === (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })().toDateString();
+
+  const isToday =
+    date instanceof Date &&
+    date.toDateString() === new Date().toDateString();
+
+  const isTomorrow =
+    date instanceof Date &&
+    date.toDateString() === (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })().toDateString();
+
   return (
     <div className="calendar-grid-wrapper">
       <Calendar
@@ -50,9 +62,9 @@ const CalendarGrid = () => {
         }
       />
       <div className="calendar-controls">
-        <button onClick={goToYesterday}>Yesterday</button>
-        <button onClick={goToToday}>Today</button>
-        <button onClick={goToTomorrow}>Tomorrow</button>
+        <button className={isYesterday ? "active" : ""} onClick={goToYesterday}>Yesterday</button>
+        <button className={isToday ? "active" : ""} onClick={goToToday}>Today</button>
+        <button className={isTomorrow ? "active" : ""} onClick={goToTomorrow}>Tomorrow</button>
       </div>
     </div>
   );
