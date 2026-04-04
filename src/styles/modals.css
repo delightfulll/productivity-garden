@@ -1,0 +1,149 @@
+/* ── Shared Modal Styles ─────────────────────────────────────── */
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.button-icon {
+  @apply text-lg;
+}
+
+/* ── Task Modal ──────────────────────────────────────────────── */
+.task-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.task-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-modal-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.task-input,
+.task-date-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.task-input:focus,
+.task-date-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.task-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.task-cancel-button,
+.task-save-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.task-cancel-button {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.task-save-button {
+  background-color: #22c55e;
+  color: white;
+}
+
+.task-cancel-button:hover,
+.task-save-button:hover {
+  transform: translateY(-1px);
+}
+
+/* ── Journal / Wins Modal ────────────────────────────────────── */
+.journal-modal {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm;
+}
+
+.journal-modal-content {
+  @apply bg-white rounded-lg p-6 w-full max-w-lg shadow-xl;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.journal-modal-title {
+  @apply text-xl font-semibold text-gray-800;
+}
+
+.journal-textarea {
+  @apply w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 min-h-[300px] resize-none text-gray-700;
+  transition: all 0.3s ease;
+}
+
+.journal-textarea:focus {
+  @apply border-green-500 shadow-md;
+}
+
+.journal-modal-buttons {
+  @apply flex justify-end space-x-3 mt-4;
+}
+
+.journal-cancel-button {
+  @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium;
+}
+
+.journal-save-button {
+  @apply px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium flex items-center gap-2;
+}

@@ -1,0 +1,230 @@
+/* ── Shared Entry / Win Cards (used in Journal + Wins) ───────── */
+.win-section {
+  @apply mb-8;
+}
+
+.win-section-title {
+  @apply text-lg font-bold text-gray-800 mb-2 flex items-center;
+}
+
+.win-card {
+  @apply bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200;
+}
+
+.win-card-text {
+  @apply text-gray-700 text-base leading-relaxed;
+}
+
+.journal-entry-date {
+  @apply text-sm text-gray-500 mt-2 block;
+}
+
+.add-win-card {
+  @apply flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-dashed border-gray-200 hover:border-green-500 transition-colors duration-200 cursor-pointer;
+}
+
+.add-win-input {
+  @apply text-gray-500;
+}
+
+.add-win-plus {
+  @apply p-2 text-green-500 hover:text-green-600 transition-colors duration-200;
+}
+
+/* ── Journal Week Timeline ───────────────────────────────────── */
+.journal-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.journal-week-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+  text-align: center;
+}
+
+.journal-timeline-chips {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.journal-timeline-arrow {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  transition: border-color 0.2s, color 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.journal-timeline-arrow:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.journal-timeline-arrow-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.journal-timeline-arrow-disabled:hover {
+  border-color: #e5e7eb !important;
+  color: #6b7280 !important;
+}
+
+/* ── Date Chips ──────────────────────────────────────────────── */
+.journal-date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.65rem 0.5rem;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  gap: 0.1rem;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.journal-date-chip:hover {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.journal-date-chip-active {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15) !important;
+}
+
+.journal-date-chip-day {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.journal-date-chip-active .journal-date-chip-day {
+  color: #16a34a;
+}
+
+.journal-date-chip-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.journal-date-chip-active .journal-date-chip-num {
+  color: #15803d;
+}
+
+.journal-date-chip-month {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.journal-date-chip-active .journal-date-chip-month {
+  color: #16a34a;
+}
+
+.journal-date-chip-today {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #22c55e;
+  background: #dcfce7;
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  margin-top: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.journal-date-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}
+
+.journal-date-dot-active {
+  background: #15803d;
+}
+
+/* ── Entry Display ───────────────────────────────────────────── */
+.journal-selected-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.journal-entry-card {
+  align-items: flex-start !important;
+  justify-content: space-between;
+}
+
+.journal-card-delete-btn {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  opacity: 0;
+}
+
+.journal-entry-card:hover .journal-card-delete-btn {
+  opacity: 1;
+}
+
+.journal-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2.5rem 1rem;
+  color: #9ca3af;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  border: 1.5px dashed #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+.journal-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}

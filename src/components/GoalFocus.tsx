@@ -1,37 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { FaSeedling, FaChevronDown, FaTimes } from "react-icons/fa";
-
-interface Goal {
-  id: number;
-  title: string;
-  description: string;
-  targetDate: string;
-  achieved: boolean;
-}
+import { goalsApi, type Goal } from "../lib/api";
 
 function GoalFocus() {
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [focusedId, setFocusedId] = useState<number | null>(null);
+  const [focusedId, setFocusedId] = useState<number | null>(() => {
+    const saved = localStorage.getItem("focusedGoalId");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
-      const savedGoals = localStorage.getItem("goals");
-      if (savedGoals) setGoals(JSON.parse(savedGoals));
-
-      const savedFocus = localStorage.getItem("focusedGoalId");
-      if (savedFocus) setFocusedId(JSON.parse(savedFocus));
-    };
-
-    loadData();
-
-    // Re-sync when the user switches back to this tab or goals are updated
-    window.addEventListener("focus", loadData);
-    window.addEventListener("storage", loadData);
-    return () => {
-      window.removeEventListener("focus", loadData);
-      window.removeEventListener("storage", loadData);
-    };
+    goalsApi
+      .list()
+      .then(setGoals)
+      .catch((err) => console.error("Failed to load goals:", err));
   }, []);
 
   useEffect(() => {
@@ -69,8 +52,8 @@ function GoalFocus() {
           {focusedGoal.description && (
             <p className="goal-focus-desc">{focusedGoal.description}</p>
           )}
-          {focusedGoal.targetDate && (
-            <p className="goal-focus-date">Target: {focusedGoal.targetDate}</p>
+          {focusedGoal.target_date && (
+            <p className="goal-focus-date">Target: {focusedGoal.target_date}</p>
           )}
           <button
             className="goal-focus-change"

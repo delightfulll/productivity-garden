@@ -1,0 +1,88 @@
+/* ── Backlog ──────────────────────────────────────────────────── */
+.backlog-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.backlog-empty-icon {
+  font-size: 2rem;
+  color: #d1d5db;
+}
+
+.backlog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.backlog-item:last-of-type {
+  border-bottom: none;
+}
+
+.backlog-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.backlog-item-number {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #d1d5db;
+  min-width: 1.25rem;
+  text-align: right;
+}
+
+.backlog-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.backlog-item-text {
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.backlog-item-note {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.backlog-item-date {
+  font-size: 0.78rem;
+  color: #d1d5db;
+  white-space: nowrap;
+}
+
+.backlog-delete-btn {
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.3rem;
+  border-radius: 4px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.backlog-delete-btn:hover {
+  color: #ef4444;
+}

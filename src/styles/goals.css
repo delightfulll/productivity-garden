@@ -1,0 +1,351 @@
+/* ── Goals List ──────────────────────────────────────────────── */
+.goals-section {
+  margin-top: 1.25rem;
+}
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.goal-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.1rem 1.1rem 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.goal-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #86efac;
+}
+
+.goal-card-achieved {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  opacity: 0.85;
+}
+
+.goal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.goal-icon {
+  color: #22c55e;
+  font-size: 1.1rem;
+  margin-top: 0.1rem;
+}
+
+.goal-icon-achieved {
+  color: #16a34a;
+  font-size: 1.1rem;
+}
+
+.goal-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.goal-achieve-btn {
+  background: none;
+  border: 1.5px solid #86efac;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.goal-achieve-btn:hover {
+  background: #22c55e;
+  color: white;
+}
+
+.goal-undo-btn {
+  background: none;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.goal-undo-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.goal-delete-btn {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.goal-delete-btn:hover {
+  color: #ef4444;
+}
+
+.goal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.goal-title-achieved {
+  color: #16a34a;
+  text-decoration: line-through;
+  text-decoration-color: #86efac;
+}
+
+.goal-description {
+  font-size: 0.87rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.goal-footer {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.goal-date {
+  font-size: 0.78rem;
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.goal-created {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.goal-add-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem;
+  background: white;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 80px;
+}
+
+.goal-add-card:hover {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.goal-add-icon {
+  color: #22c55e;
+  font-size: 1rem;
+}
+
+.goal-add-text {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.goal-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.goal-textarea:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+.goals-achieved-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 1.75rem 0 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* ── Goal Focus Widget ───────────────────────────────────────── */
+.goal-focus-widget {
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  border-radius: 14px;
+  border: 2px solid rgb(34, 197, 94);
+  padding: 1rem 1.1rem 1.1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  position: relative;
+  align-self: flex-start;
+}
+
+.goal-focus-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.goal-focus-icon {
+  color: #22c55e;
+  font-size: 1rem;
+}
+
+.goal-focus-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+}
+
+.goal-focus-clear {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.goal-focus-clear:hover {
+  color: #ef4444;
+}
+
+.goal-focus-card {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.goal-focus-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #15803d;
+  line-height: 1.3;
+}
+
+.goal-focus-desc {
+  font-size: 0.85rem;
+  color: #4b7c59;
+  line-height: 1.4;
+}
+
+.goal-focus-date {
+  font-size: 0.78rem;
+  color: #22c55e;
+  font-weight: 500;
+  margin-top: 0.1rem;
+}
+
+.goal-focus-change {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.35rem;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.goal-focus-change:hover {
+  color: #22c55e;
+}
+
+.goal-focus-pick {
+  width: 100%;
+  background: #f9fafb;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.88rem;
+  color: #9ca3af;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.goal-focus-pick:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+  background: #f0fdf4;
+}
+
+.goal-focus-dropdown {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  list-style: none;
+  padding: 0.35rem 0;
+  margin-top: 0.35rem;
+  overflow: hidden;
+}
+
+.goal-focus-option {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.goal-focus-option:hover {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.goal-focus-option-active {
+  background: #f0fdf4;
+  color: #16a34a;
+  font-weight: 500;
+}

@@ -1,0 +1,24 @@
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  @apply w-64 bg-white shadow-lg p-6 border-r border-gray-200 flex flex-col fixed h-screen;
+}
+
+.sidebar-title {
+  @apply text-green-500 text-2xl font-bold mb-8 cursor-pointer;
+}
+
+.nav-section {
+  @apply flex flex-col space-y-4;
+}
+
+.nav-button {
+  @apply w-full py-3 px-4 bg-white rounded-lg hover:bg-green-500 hover:text-white transition-colors duration-200 text-left cursor-pointer;
+}
+
+.nav-button.active {
+  @apply bg-green-500 text-white;
+}
+
+.bottom-nav {
+  @apply mt-auto pt-4 border-t border-gray-200;
+}
