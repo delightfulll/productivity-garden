@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
+import { tasksApi, type Task } from "../lib/api";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
-import { FaPlus, FaGripVertical, FaSave, FaTimes } from "react-icons/fa";
+import { FaPlus, FaGripVertical, FaSave, FaTimes, FaTrash } from "react-icons/fa";
 import "../styles/index.css";
 import CustomCalendar from "../components/calendar";
 import Modal from "react-modal";
@@ -16,20 +17,15 @@ interface TaskItemProps {
   task: any;
   category: string;
   onComplete: (taskId: number, category: string) => void;
+  onDelete: (taskId: number, category: string) => void;
   taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
-const TaskItem = ({ task, category, onComplete, taskRefs }: TaskItemProps) => (
+const TaskItem = ({ task, category, onComplete, onDelete, taskRefs }: TaskItemProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.2 }}
     className={`task-item ${task.completed ? "task-completed" : ""}`}
     ref={(el) => {
-      if (el) {
-        taskRefs.current[task.id] = el;
-      }
+      if (el) taskRefs.current[task.id] = el;
     }}
   >
     <motion.div
@@ -50,6 +46,15 @@ const TaskItem = ({ task, category, onComplete, taskRefs }: TaskItemProps) => (
       {task.text}
     </span>
     <span className="task-date">{task.date}</span>
+    <motion.button
+      className="task-delete-btn"
+      onClick={() => onDelete(task.id, category)}
+      whileHover={{ scale: 1.15 }}
+      whileTap={{ scale: 0.9 }}
+      title="Delete task"
+    >
+      <FaTrash />
+    </motion.button>
   </motion.div>
 );
 
@@ -79,130 +84,59 @@ function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [wateringTasks, setWateringTasks] = useState([
-    {
-      id: 1,
-      text: "Complete project proposal",
-      date: "Due Today",
-      completed: false,
-    },
-    {
-      id: 2,
-      text: "Review pull requests",
-      date: "Due Tomorrow",
-      completed: false,
-    },
-    {
-      id: 3,
-      text: "Update documentation",
-      date: "Due in 2 days",
-      completed: false,
-    },
-  ]);
+  const [wateringTasks, setWateringTasks] = useState<Task[]>([]);
+  const [sunlightTasks, setSunlightTasks] = useState<Task[]>([]);
+  const [compostingTasks, setCompostingTasks] = useState<Task[]>([]);
 
-  const [sunlightTasks, setSunlightTasks] = useState([
-    { id: 1, text: "Morning meditation", date: "Daily", completed: false },
-    { id: 2, text: "Read for 30 minutes", date: "Daily", completed: false },
-    { id: 3, text: "Evening reflection", date: "Daily", completed: false },
-  ]);
-
-  const [compostingTasks, setCompostingTasks] = useState([
-    {
-      id: 1,
-      text: "Clean email inbox",
-      date: "When possible",
-      completed: false,
-    },
-    { id: 2, text: "Organize desk", date: "When possible", completed: false },
-    { id: 3, text: "Update software", date: "When possible", completed: false },
-  ]);
-
-  // Load tasks from localStorage on component mount
+  // Load tasks from API on mount
   useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const savedWateringTasks = await localStorage.getItem("wateringTasks");
-        const savedSunlightTasks = await localStorage.getItem("sunlightTasks");
-        const savedCompostingTasks =
-          await localStorage.getItem("compostingTasks");
-
-        if (savedWateringTasks)
-          setWateringTasks(JSON.parse(savedWateringTasks));
-        if (savedSunlightTasks)
-          setSunlightTasks(JSON.parse(savedSunlightTasks));
-        if (savedCompostingTasks)
-          setCompostingTasks(JSON.parse(savedCompostingTasks));
-      } catch (error) {
-        console.error("Error loading tasks:", error);
-      }
-    };
-
-    loadTasks();
+    tasksApi.list().then((all) => {
+      setWateringTasks(all.filter((t) => t.category === "watering"));
+      setSunlightTasks(all.filter((t) => t.category === "sunlight"));
+      setCompostingTasks(all.filter((t) => t.category === "composting"));
+    }).catch((err) => console.error("Failed to load tasks:", err));
   }, []);
 
-  // Save tasks to localStorage whenever they change
-  useEffect(() => {
-    const saveTasks = async () => {
-      try {
-        await localStorage.setItem(
-          "wateringTasks",
-          JSON.stringify(wateringTasks),
-        );
-        await localStorage.setItem(
-          "sunlightTasks",
-          JSON.stringify(sunlightTasks),
-        );
-        await localStorage.setItem(
-          "compostingTasks",
-          JSON.stringify(compostingTasks),
-        );
-      } catch (error) {
-        console.error("Error saving tasks:", error);
-      }
-    };
-
-    saveTasks();
-  }, [wateringTasks, sunlightTasks, compostingTasks]);
-
   const handleTaskComplete = (taskId: number, category: string) => {
-    // Get the position of the completed task before updating state
     const taskElement = taskRefs.current[taskId];
-    if (taskElement) {
-      const rect = taskElement.getBoundingClientRect();
+    if (!taskElement) return;
 
-      // Batch state updates
-      const updateTasks = (tasks: any[]) =>
-        tasks.map((task: any) =>
-          task.id === taskId ? { ...task, completed: !task.completed } : task,
-        );
+    const rect = taskElement.getBoundingClientRect();
 
-      // Update all states at once
-      switch (category) {
-        case "watering":
-          setWateringTasks(updateTasks(wateringTasks));
-          break;
-        case "sunlight":
-          setSunlightTasks(updateTasks(sunlightTasks));
-          break;
-        case "composting":
-          setCompostingTasks(updateTasks(compostingTasks));
-          break;
-      }
+    const updateTasks = (tasks: Task[]) =>
+      tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task,
+      );
 
-      // Set confetti position and trigger after task update
-      requestAnimationFrame(() => {
-        setConfettiPosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2 - 80,
-        });
-        setShowConfetti(true);
-
-        // Clear the confetti after animation
-        setTimeout(() => {
-          setShowConfetti(false);
-        }, 2000);
-      });
+    let currentCompleted = false;
+    switch (category) {
+      case "watering":
+        currentCompleted = wateringTasks.find((t) => t.id === taskId)?.completed ?? false;
+        setWateringTasks(updateTasks(wateringTasks));
+        break;
+      case "sunlight":
+        currentCompleted = sunlightTasks.find((t) => t.id === taskId)?.completed ?? false;
+        setSunlightTasks(updateTasks(sunlightTasks));
+        break;
+      case "composting":
+        currentCompleted = compostingTasks.find((t) => t.id === taskId)?.completed ?? false;
+        setCompostingTasks(updateTasks(compostingTasks));
+        break;
     }
+
+    // Sync to API
+    tasksApi.update(taskId, { completed: !currentCompleted }).catch((err) =>
+      console.error("Failed to update task:", err)
+    );
+
+    requestAnimationFrame(() => {
+      setConfettiPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2 - 80,
+      });
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
+    });
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -212,33 +146,43 @@ function Home() {
     "watering" | "sunlight" | "composting" | null
   >(null);
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!newTaskText.trim() || !activeCategory) return;
 
-    const newTask = {
-      id: Date.now(),
-      text: newTaskText.trim(),
-      date: newTaskDate || "No date",
-      completed: false,
-    };
+    try {
+      const created = await tasksApi.create({
+        text: newTaskText.trim(),
+        date: newTaskDate || "No date",
+        category: activeCategory,
+      });
 
-    switch (activeCategory) {
-      case "watering":
-        setWateringTasks([...wateringTasks, newTask]);
-        break;
-      case "sunlight":
-        setSunlightTasks([...sunlightTasks, newTask]);
-        break;
-      case "composting":
-        setCompostingTasks([...compostingTasks, newTask]);
-        break;
+      switch (activeCategory) {
+        case "watering":  setWateringTasks([...wateringTasks, created]); break;
+        case "sunlight":  setSunlightTasks([...sunlightTasks, created]); break;
+        case "composting": setCompostingTasks([...compostingTasks, created]); break;
+      }
+    } catch (err) {
+      console.error("Failed to create task:", err);
     }
 
-    // Reset form and close modal
     setNewTaskText("");
     setNewTaskDate("");
     setIsModalOpen(false);
     setActiveCategory(null);
+  };
+
+  const handleDeleteTask = async (taskId: number, category: string) => {
+    // Optimistic removal
+    switch (category) {
+      case "watering":   setWateringTasks((t) => t.filter((x) => x.id !== taskId)); break;
+      case "sunlight":   setSunlightTasks((t) => t.filter((x) => x.id !== taskId)); break;
+      case "composting": setCompostingTasks((t) => t.filter((x) => x.id !== taskId)); break;
+    }
+    try {
+      await tasksApi.delete(taskId);
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
   };
 
   const openAddTaskModal = (
@@ -338,12 +282,13 @@ function Home() {
                       }}
                       transition={{ duration: 0.2 }}
                     >
-                      <TaskItem
-                        task={task}
-                        category="watering"
-                        onComplete={handleTaskComplete}
-                        taskRefs={taskRefs}
-                      />
+                        <TaskItem
+                          task={task}
+                          category="watering"
+                          onComplete={handleTaskComplete}
+                          onDelete={handleDeleteTask}
+                          taskRefs={taskRefs}
+                        />
                     </Reorder.Item>
                   ))}
                 </AnimatePresence>
@@ -376,12 +321,13 @@ function Home() {
                         boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <TaskItem
-                        task={task}
-                        category="sunlight"
-                        onComplete={handleTaskComplete}
-                        taskRefs={taskRefs}
-                      />
+                        <TaskItem
+                          task={task}
+                          category="sunlight"
+                          onComplete={handleTaskComplete}
+                          onDelete={handleDeleteTask}
+                          taskRefs={taskRefs}
+                        />
                     </Reorder.Item>
                   ))}
                 </AnimatePresence>
@@ -414,12 +360,13 @@ function Home() {
                         boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <TaskItem
-                        task={task}
-                        category="composting"
-                        onComplete={handleTaskComplete}
-                        taskRefs={taskRefs}
-                      />
+                        <TaskItem
+                          task={task}
+                          category="composting"
+                          onComplete={handleTaskComplete}
+                          onDelete={handleDeleteTask}
+                          taskRefs={taskRefs}
+                        />
                     </Reorder.Item>
                   ))}
                 </AnimatePresence>

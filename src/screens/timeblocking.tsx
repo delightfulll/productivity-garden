@@ -4,52 +4,56 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import "../styles/TimeBlocking.css";
 import CustomCalendar from "../components/calendar";
+import { timeblockingApi, type TimeBlockingEvent } from "../lib/api";
 
-interface Event {
-  id: string;
+interface LocalEvent {
+  id: number;
   title: string;
-  description?: string;
-  color?: string;
+  description: string;
+  color: string;
 }
 
 interface TimeSlot {
   id: string;
   time: string;
-  events: Event[];
+  events: LocalEvent[];
 }
 
-//add to supabase
-const TimeBlocking = () => {
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(() => {
-    // Generate time slots from 12 AM to 11:59 PM
-    const slots: TimeSlot[] = [];
-    for (let hour = 0; hour < 24; hour++) {
-      const time = `${hour.toString().padStart(2, "0")}:00`;
-      slots.push({
-        id: `${hour}-00`,
-        time,
-        events: [],
-      });
-    }
-    return slots;
-  });
+const today = new Date().toISOString().split("T")[0];
 
+const generateSlots = (): TimeSlot[] =>
+  Array.from({ length: 24 }, (_, hour) => ({
+    id: `${hour.toString().padStart(2, "0")}-00`,
+    time: `${hour.toString().padStart(2, "0")}:00`,
+    events: [],
+  }));
+
+const TimeBlocking = () => {
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(generateSlots);
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDescription, setNewEventDescription] = useState("");
 
-  // Load saved time slots from localStorage
+  // Load events from API and merge into slots
   useEffect(() => {
-    const savedSlots = localStorage.getItem("timeSlots");
-    if (savedSlots) {
-      setTimeSlots(JSON.parse(savedSlots));
-    }
+    timeblockingApi.list(today)
+      .then((events: TimeBlockingEvent[]) => {
+        setTimeSlots((slots) =>
+          slots.map((slot) => ({
+            ...slot,
+            events: events
+              .filter((e) => e.slot_id === slot.id)
+              .map((e) => ({
+                id: e.id,
+                title: e.title,
+                description: e.description,
+                color: e.color,
+              })),
+          }))
+        );
+      })
+      .catch((err) => console.error("Failed to load time blocking events:", err));
   }, []);
-
-  // Save time slots to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("timeSlots", JSON.stringify(timeSlots));
-  }, [timeSlots]);
 
   const handleAddEvent = (slotId: string) => {
     setEditingSlot(slotId);
@@ -57,39 +61,56 @@ const TimeBlocking = () => {
     setNewEventDescription("");
   };
 
-  const handleSaveEvent = (slotId: string) => {
+  const handleSaveEvent = async (slotId: string) => {
     if (!newEventTitle.trim()) return;
 
-    const newEvent: Event = {
-      id: Date.now().toString(),
-      title: newEventTitle,
-      description: newEventDescription,
-      color: `hsl(${Math.random() * 360}, 70%, 80%)`,
-    };
+    const color = `hsl(${Math.random() * 360}, 70%, 80%)`;
 
-    setTimeSlots((slots) =>
-      slots.map((slot) =>
-        slot.id === slotId
-          ? { ...slot, events: [...slot.events, newEvent] }
-          : slot
-      )
-    );
+    try {
+      const created = await timeblockingApi.create({
+        slot_id: slotId,
+        title: newEventTitle,
+        description: newEventDescription,
+        color,
+        event_date: today,
+      });
+
+      const localEvent: LocalEvent = {
+        id: created.id,
+        title: created.title,
+        description: created.description,
+        color: created.color,
+      };
+
+      setTimeSlots((slots) =>
+        slots.map((slot) =>
+          slot.id === slotId
+            ? { ...slot, events: [...slot.events, localEvent] }
+            : slot
+        )
+      );
+    } catch (err) {
+      console.error("Failed to save event:", err);
+    }
+
     setEditingSlot(null);
     setNewEventTitle("");
     setNewEventDescription("");
   };
 
-  const handleDeleteEvent = (slotId: string, eventId: string) => {
+  const handleDeleteEvent = async (slotId: string, eventId: number) => {
     setTimeSlots((slots) =>
       slots.map((slot) =>
         slot.id === slotId
-          ? {
-              ...slot,
-              events: slot.events.filter((event) => event.id !== eventId),
-            }
+          ? { ...slot, events: slot.events.filter((e) => e.id !== eventId) }
           : slot
       )
     );
+    try {
+      await timeblockingApi.delete(eventId);
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+    }
   };
 
   const formatTime = (time: string) => {

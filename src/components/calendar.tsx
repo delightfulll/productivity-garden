@@ -3,7 +3,6 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../styles/App.css";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
-import Focus from "./focus";
 
 type Value = Date | [Date, Date] | null;
 
@@ -31,7 +30,7 @@ const CustomCalendar = () => {
   };
 
   return (
-    <div className="calendar-container">
+    <div className="calendar-inner">
       <div className="calendar-header" onClick={() => setIsOpen(!isOpen)}>
         <span>Calendar</span>
         {isOpen ? <FaChevronUp /> : <FaChevronDown />}

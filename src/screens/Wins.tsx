@@ -1,113 +1,103 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaPlus, FaTimes, FaSave } from "react-icons/fa";
+import { FaPlus, FaTimes, FaSave, FaTrash } from "react-icons/fa";
 import Modal from "react-modal";
+import { winsApi, type Win } from "../lib/api";
 
 type WinCategory = "physical" | "mental" | "spiritual";
-
-interface Win {
-  id: number;
-  content: string;
-  date: string;
-}
-
-interface Wins {
-  physical: Win[];
-  mental: Win[];
-  spiritual: Win[];
-}
 
 function Wins() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winEntry, setWinEntry] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState<WinCategory>("physical");
-  const [wins, setWins] = useState<Wins>({
-    physical: [
-      {
-        id: 1,
-        content: "Completed a 5K run in under 25 minutes",
-        date: "2024-03-20",
-      },
-    ],
-    mental: [
-      {
-        id: 1,
-        content: "Finished reading a challenging book",
-        date: "2024-03-20",
-      },
-    ],
-    spiritual: [
-      { id: 1, content: "Meditated for 20 minutes", date: "2024-03-20" },
-    ],
-  });
+  const [selectedCategory, setSelectedCategory] = useState<WinCategory>("physical");
+  const [wins, setWins] = useState<Win[]>([]);
 
-  const handleAddWin = () => {
-    if (winEntry.trim()) {
-      const newWin: Win = {
-        id: wins[selectedCategory].length + 1,
-        content: winEntry,
-        date: new Date().toISOString().split("T")[0],
-      };
+  useEffect(() => {
+    winsApi.list()
+      .then(setWins)
+      .catch((err) => console.error("Failed to load wins:", err));
+  }, []);
 
-      setWins({
-        ...wins,
-        [selectedCategory]: [...wins[selectedCategory], newWin],
-      });
-      setWinEntry("");
-      setIsModalOpen(false);
+  const handleAddWin = async () => {
+    if (!winEntry.trim()) return;
+    try {
+      const created = await winsApi.create({ category: selectedCategory, content: winEntry.trim() });
+      setWins([...wins, created]);
+    } catch (err) {
+      console.error("Failed to create win:", err);
+    }
+    setWinEntry("");
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteWin = async (id: number) => {
+    setWins(wins.filter((w) => w.id !== id));
+    try {
+      await winsApi.delete(id);
+    } catch (err) {
+      console.error("Failed to delete win:", err);
     }
   };
 
-  const renderWinSection = (category: WinCategory, title: string) => (
-    <div className="win-section">
-      <h3 className="win-section-title">{title}</h3>
-      <AnimatePresence>
-        {wins[category].map((win: Win, index: number) => (
-          <motion.div
-            key={win.id}
-            className="win-card"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="flex flex-col">
-              <span className="win-card-text">{win.content}</span>
-              <span className="journal-entry-date">{win.date}</span>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      <motion.div
-        className="add-win-card"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => {
-          setSelectedCategory(category);
-          setIsModalOpen(true);
-        }}
-      >
-        <motion.button
-          className="add-win-plus"
-          whileHover={{ rotate: 90 }}
-          transition={{ duration: 0.2 }}
+  const renderWinSection = (category: WinCategory, title: string) => {
+    const categoryWins = wins.filter((w) => w.category === category);
+    return (
+      <div className="win-section">
+        <h3 className="win-section-title">{title}</h3>
+        <AnimatePresence>
+          {categoryWins.map((win) => (
+            <motion.div
+              key={win.id}
+              className="win-card"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              whileHover={{ scale: 1.02 }}
+              style={{ justifyContent: "space-between" }}
+            >
+              <div className="flex flex-col">
+                <span className="win-card-text">{win.content}</span>
+                <span className="journal-entry-date">
+                  {new Date(win.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <motion.button
+                style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", padding: "0.25rem" }}
+                onClick={() => handleDeleteWin(win.id)}
+                whileHover={{ color: "#ef4444", scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <FaTrash />
+              </motion.button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        <motion.div
+          className="add-win-card"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => { setSelectedCategory(category); setIsModalOpen(true); }}
         >
-          <FaPlus />
-        </motion.button>
-        <span className="add-win-input">Add a new {category} win...</span>
-      </motion.div>
-    </div>
-  );
+          <motion.button
+            className="add-win-plus"
+            whileHover={{ rotate: 90 }}
+            transition={{ duration: 0.2 }}
+          >
+            <FaPlus />
+          </motion.button>
+          <span className="add-win-input">Add a new {category} win...</span>
+        </motion.div>
+      </div>
+    );
+  };
 
   return (
     <div className="app-container">
       <Sidebar />
 
-      {/* Main Content Area */}
       <div className="main-content">
         <div className="content-container">
           <motion.h2
@@ -133,7 +123,6 @@ function Wins() {
         </div>
       </div>
 
-      {/* React Modal */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
@@ -148,10 +137,7 @@ function Wins() {
         >
           <div className="modal-header">
             <h3 className="journal-modal-title">
-              New{" "}
-              {selectedCategory.charAt(0).toUpperCase() +
-                selectedCategory.slice(1)}{" "}
-              Win
+              New {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Win
             </h3>
             <motion.button
               className="modal-close-button"

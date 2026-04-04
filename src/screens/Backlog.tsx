@@ -2,13 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaSave, FaTimes, FaLayerGroup } from "react-icons/fa";
 import Modal from "react-modal";
-
-interface BacklogTask {
-  id: number;
-  text: string;
-  note: string;
-  createdAt: string;
-}
+import { backlogApi, type BacklogTask } from "../lib/api";
 
 function Backlog() {
   const [tasks, setTasks] = useState<BacklogTask[]>([]);
@@ -17,30 +11,31 @@ function Backlog() {
   const [newNote, setNewNote] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("backlogTasks");
-    if (saved) setTasks(JSON.parse(saved));
+    backlogApi.list()
+      .then(setTasks)
+      .catch((err) => console.error("Failed to load backlog:", err));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("backlogTasks", JSON.stringify(tasks));
-  }, [tasks]);
-
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!newText.trim()) return;
-    const task: BacklogTask = {
-      id: Date.now(),
-      text: newText.trim(),
-      note: newNote.trim(),
-      createdAt: new Date().toLocaleDateString(),
-    };
-    setTasks([...tasks, task]);
+    try {
+      const created = await backlogApi.create({ text: newText.trim(), note: newNote.trim() });
+      setTasks([...tasks, created]);
+    } catch (err) {
+      console.error("Failed to add backlog task:", err);
+    }
     setNewText("");
     setNewNote("");
     setIsModalOpen(false);
   };
 
-  const deleteTask = (id: number) => {
+  const deleteTask = async (id: number) => {
     setTasks(tasks.filter((t) => t.id !== id));
+    try {
+      await backlogApi.delete(id);
+    } catch (err) {
+      console.error("Failed to delete backlog task:", err);
+    }
   };
 
   return (
@@ -72,7 +67,9 @@ function Backlog() {
                     <span className="backlog-item-note">{task.note}</span>
                   )}
                 </div>
-                <span className="backlog-item-date">{task.createdAt}</span>
+                <span className="backlog-item-date">
+                  {new Date(task.created_at).toLocaleDateString()}
+                </span>
               </div>
               <motion.button
                 className="backlog-delete-btn"

@@ -4,48 +4,37 @@ import { FaFire, FaCalendarCheck, FaChartLine } from "react-icons/fa";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import "../styles/Addictions.css";
+import { addictionsApi, type Checkin } from "../lib/api";
 
 function Addictions() {
   const [streak, setStreak] = useState(0);
-  const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
-  const [checkIns, setCheckIns] = useState<
-    { date: Date; stayedClean: boolean }[]
-  >([]);
+  const [checkIns, setCheckIns] = useState<Checkin[]>([]);
 
   useEffect(() => {
-    // Load saved data from localStorage
-    const savedStreak = localStorage.getItem("addictionStreak");
-    const savedCheckIns = localStorage.getItem("addictionCheckIns");
-    const savedLastCheckIn = localStorage.getItem("lastCheckIn");
-
-    if (savedStreak) setStreak(parseInt(savedStreak));
-    if (savedCheckIns) setCheckIns(JSON.parse(savedCheckIns));
-    if (savedLastCheckIn) setLastCheckIn(new Date(savedLastCheckIn));
-
+    Promise.all([
+      addictionsApi.getStreak(),
+      addictionsApi.listCheckins(),
+    ])
+      .then(([streakData, checkins]) => {
+        setStreak(streakData.streak);
+        setCheckIns(checkins);
+      })
+      .catch((err) => console.error("Failed to load addiction data:", err));
   }, []);
 
-  const handleCheckIn = (stayedClean: boolean) => {
-    const today = new Date();
-    const newCheckIns = [...checkIns, { date: today, stayedClean }];
-    setCheckIns(newCheckIns);
-    localStorage.setItem("addictionCheckIns", JSON.stringify(newCheckIns));
-
-    if (stayedClean) {
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      localStorage.setItem("addictionStreak", newStreak.toString());
-    } else {
-      setStreak(0);
-      localStorage.setItem("addictionStreak", "0");
+  const handleCheckIn = async (stayedClean: boolean) => {
+    try {
+      const result = await addictionsApi.checkIn(stayedClean);
+      setStreak(result.streak);
+      setCheckIns([...checkIns, result.checkin]);
+    } catch (err) {
+      console.error("Failed to save check-in:", err);
     }
-
-    setLastCheckIn(today);
-    localStorage.setItem("lastCheckIn", today.toISOString());
   };
 
   const calculateProgress = () => {
     if (checkIns.length === 0) return 0;
-    const cleanDays = checkIns.filter((check) => check.stayedClean).length;
+    const cleanDays = checkIns.filter((c) => c.stayed_clean).length;
     return (cleanDays / checkIns.length) * 100;
   };
 
@@ -53,7 +42,6 @@ function Addictions() {
     <div className="app-container">
       <Sidebar />
 
-      {/* Main Content Area */}
       <div className="main-content">
         <div className="content-container">
           <h2 className="content-title">Recovery Tracker</h2>
@@ -114,19 +102,15 @@ function Addictions() {
                 .reverse()
                 .map((check, index) => (
                   <motion.div
-                    key={index}
-                    className={`history-item ${
-                      check.stayedClean ? "clean" : "slipped"
-                    }`}
+                    key={check.id}
+                    className={`history-item ${check.stayed_clean ? "clean" : "slipped"}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
                     <FaCalendarCheck />
-                    <span>{new Date(check.date).toLocaleDateString()}</span>
-                    <span>
-                      {check.stayedClean ? "Stayed Clean" : "Slipped Up"}
-                    </span>
+                    <span>{new Date(check.checked_at).toLocaleDateString()}</span>
+                    <span>{check.stayed_clean ? "Stayed Clean" : "Slipped Up"}</span>
                   </motion.div>
                 ))}
             </div>

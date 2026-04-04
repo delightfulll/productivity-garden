@@ -2,15 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaSave, FaTimes, FaSeedling, FaCheck } from "react-icons/fa";
 import Modal from "react-modal";
-
-interface Goal {
-  id: number;
-  title: string;
-  description: string;
-  targetDate: string;
-  achieved: boolean;
-  createdAt: string;
-}
+import { goalsApi, type Goal } from "../lib/api";
 
 function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -20,39 +12,49 @@ function Goals() {
   const [newTargetDate, setNewTargetDate] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("goals");
-    if (saved) setGoals(JSON.parse(saved));
+    goalsApi.list()
+      .then(setGoals)
+      .catch((err) => console.error("Failed to load goals:", err));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("goals", JSON.stringify(goals));
-  }, [goals]);
-
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (!newTitle.trim()) return;
-    const goal: Goal = {
-      id: Date.now(),
-      title: newTitle.trim(),
-      description: newDescription.trim(),
-      targetDate: newTargetDate,
-      achieved: false,
-      createdAt: new Date().toLocaleDateString(),
-    };
-    setGoals([...goals, goal]);
+    try {
+      const created = await goalsApi.create({
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        target_date: newTargetDate,
+      });
+      setGoals([...goals, created]);
+    } catch (err) {
+      console.error("Failed to create goal:", err);
+    }
     setNewTitle("");
     setNewDescription("");
     setNewTargetDate("");
     setIsModalOpen(false);
   };
 
-  const toggleAchieved = (id: number) => {
-    setGoals(
-      goals.map((g) => (g.id === id ? { ...g, achieved: !g.achieved } : g)),
-    );
+  const toggleAchieved = async (id: number) => {
+    const goal = goals.find((g) => g.id === id);
+    if (!goal) return;
+    const updated = { ...goal, achieved: !goal.achieved };
+    setGoals(goals.map((g) => (g.id === id ? updated : g)));
+    try {
+      await goalsApi.update(id, { achieved: updated.achieved });
+    } catch (err) {
+      console.error("Failed to update goal:", err);
+      setGoals(goals); // revert
+    }
   };
 
-  const deleteGoal = (id: number) => {
+  const deleteGoal = async (id: number) => {
     setGoals(goals.filter((g) => g.id !== id));
+    try {
+      await goalsApi.delete(id);
+    } catch (err) {
+      console.error("Failed to delete goal:", err);
+    }
   };
 
   const activeGoals = goals.filter((g) => !g.achieved);
@@ -103,20 +105,27 @@ function Goals() {
                   <p className="goal-description">{goal.description}</p>
                 )}
                 <div className="goal-footer">
-                  {goal.targetDate && (
-                    <span className="goal-date">Target: {goal.targetDate}</span>
+                  {goal.target_date && (
+                    <span className="goal-date">Target: {goal.target_date}</span>
                   )}
-                  <span className="goal-created">Added {goal.createdAt}</span>
+                  <span className="goal-created">
+                    Added {new Date(goal.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
           {/* Add Goal Card */}
-          <div className="goal-add-card" onClick={() => setIsModalOpen(true)}>
+          <motion.div
+            className="goal-add-card"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setIsModalOpen(true)}
+          >
             <FaPlus className="goal-add-icon" />
             <span className="goal-add-text">Plant a new goal...</span>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -156,9 +165,7 @@ function Goals() {
                       </motion.button>
                     </div>
                   </div>
-                  <h3 className="goal-title goal-title-achieved">
-                    {goal.title}
-                  </h3>
+                  <h3 className="goal-title goal-title-achieved">{goal.title}</h3>
                   {goal.description && (
                     <p className="goal-description">{goal.description}</p>
                   )}
