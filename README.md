@@ -1,135 +1,160 @@
-# 🌱 Productivity Garden
+# Productivity Garden
 
-> A beautiful productivity app that helps you tend to your tasks like a garden — nurture what matters, grow your habits, and compost the rest.
+A productivity app for goals, daily tasks, journaling, wins, and focus sessions—organized around a “garden” metaphor: water what matters, give sunlight to your priorities, and compost the rest.
 
 ---
 
 ## Features
 
-|                     |                                                     |
-| ------------------- | --------------------------------------------------- |
-| **Task Categories** | Organize tasks into Watering, Sunlight & Composting |
-| **Streaks**         | Track your daily consistency and build momentum     |
-| **Calendar View**   | Visualize your schedule at a glance                 |
-| **Focus Timer**     | Stay locked in with a built-in focus session        |
-| **Profile & Stats** | Garden level, XP, wins, and activity log            |
-| **Drag & Drop**     | Reorder tasks with smooth animations                |
-| **Settings**        | Personalize your garden experience                  |
+| | |
+| --- | --- |
+| **Task categories** | Watering, Sunlight, and Composting columns with drag-and-drop reorder |
+| **Day-aware tasks** | Tasks tied to calendar days; roll over to the next day |
+| **Goals & backlog** | Goals, backlog, and milestone-style journey views |
+| **Calendar** | Month view and time blocking |
+| **Journal & wins** | Daily journal entries and wins tracking |
+| **Focus & recovery** | Timer/focus tools and addictions/recovery screens |
+| **Progress** | XP, levels, streaks, and profile stats |
+| **Auth** | Register, login, and JWT-based sessions |
 
 ---
 
-## Tech Stack
+## Deployment architecture
+
+| Layer | Service | Role |
+| --- | --- | --- |
+| **Frontend** | [Vercel](https://vercel.com) | Hosts the Vite/React app (static build, CDN, HTTPS). Connects to your Git repo for automatic deploys on push. |
+| **Backend API** | **Google Cloud Run** (recommended) | Runs the Express API from the Docker image built in this repo. Scales to zero, HTTPS URL, `PORT` injected automatically. |
+| **Container images** | **Artifact Registry** | Stores the backend Docker image produced by the build pipeline. |
+| **Build pipeline** | **Cloud Build** | `cloudbuild.yaml` builds `backend/Dockerfile` and pushes the image to Artifact Registry (substitute your image name and run `gcloud builds submit`). |
+| **Database** | **Cloud SQL for PostgreSQL** (or any Postgres) | The API expects PostgreSQL via `DB_*` env vars—Cloud SQL is the usual choice on GCP with a private or public IP and credentials in Secret Manager. |
+
+**Frontend environment:** set `VITE_API_BASE_URL` in Vercel to your API’s public URL (no trailing slash), e.g. `https://your-service-xxxxx.run.app`, then redeploy so the client bundle points at production.
+
+**Backend environment:** use `backend/.env.example` as a template (`PORT`, `DB_*`, `JWT_SECRET`). On Cloud Run, prefer Secret Manager for secrets and wire them as environment variables or mounted secrets.
+
+---
+
+## Tech stack
 
 ### Frontend
 
-| Technology          | Purpose                         |
-| ------------------- | ------------------------------- |
-| **React**           | UI framework                    |
-| **TypeScript**      | Type safety across the codebase |
-| **Vite**            | Fast dev server & build tool    |
-| **Tailwind CSS v4** | Utility-first styling           |
-| **Framer Motion**   | Animations & drag-and-drop      |
-| **React Router v7** | Client-side navigation          |
+| | |
+| --- | --- |
+| **React** | UI |
+| **TypeScript** | Shared typing |
+| **Vite** | Dev server and production build |
+| **Tailwind CSS v4** | Styling (`@tailwindcss/vite`) |
+| **Framer Motion** | Animations and reorder |
+| **React Router** | Client-side routing (`vercel.json` rewrites SPA routes) |
 
 ### Backend
 
-| Technology              | Purpose                         |
-| ----------------------- | ------------------------------- |
-| **Node.js + Express 5** | REST API server                 |
-| **TypeScript**          | Type-safe backend               |
-| **PostgreSQL**          | Primary database                |
-| **node-postgres (pg)**  | Postgres client                 |
-| **dotenv**              | Environment variable management |
-| **cors**                | Cross-origin request handling   |
+| | |
+| --- | --- |
+| **Node.js + Express** | REST API |
+| **TypeScript** | Compiled with `tsc`; local dev with `tsx` |
+| **PostgreSQL** | Primary data store (`pg`) |
+| **JWT + bcrypt** | Auth |
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 productivity-garden/
 ├── src/
-│   ├── components/        # Reusable UI components
-│   │   ├── Sidebar.tsx
-│   │   ├── calendar.tsx
-│   │   └── focus.tsx
-│   ├── screens/           # Page-level components
-│   │   ├── Home.tsx
-│   │   ├── Profile.tsx
-│   │   └── Settings.tsx
-│   ├── styles/            # Global CSS
+│   ├── components/     # Sidebar, calendar, XP bar, modals, etc.
+│   ├── context/        # Auth, stats, confirmations
+│   ├── hooks/          # e.g. day query param
+│   ├── lib/            # API client, dates, sounds
+│   ├── screens/        # Home, Journal, Wins, Journey, Auth, …
+│   ├── styles/         # CSS
 │   └── App.tsx
-│
-└── backend/
-    ├── routes/
-    │   ├── tasks.ts        # Task CRUD endpoints
-    │   └── users.ts        # User + stats endpoints
-    ├── db/
-    │   └── schema.sql      # Database schema
-    ├── db.ts               # Postgres pool
-    └── api.ts              # Express server entry point
+├── backend/
+│   ├── routes/         # tasks, users, auth, goals, journal, wins, …
+│   ├── db/             # Pool, schema, migrations, XP helpers
+│   ├── middleware/     # auth
+│   ├── Dockerfile      # API container for Cloud Run / local Docker
+│   └── api.ts          # Express entry
+├── cloudbuild.yaml     # GCP Cloud Build → Artifact Registry
+├── docker-compose.yml  # Optional: run API container locally
+├── vercel.json         # SPA fallback for client-side routes
+└── vite.config.js      # React + Tailwind plugins (must be in git for Vercel)
 ```
 
 ---
 
-## Getting Started
+## Getting started
 
-### 1. Clone the repo
+### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/delightfulll/productivity-garden.git
 cd productivity-garden
-```
-
-### 2. Install frontend dependencies
-
-```bash
 npm install
+cd backend && npm install && cd ..
 ```
 
-### 3. Install backend dependencies
+### 2. Database
+
+Create a PostgreSQL database and apply the schema:
 
 ```bash
-cd backend && npm install
+psql -U <user> -d <database> -f backend/db/schema.sql
 ```
 
-### 4. Configure environment variables
+Run additional SQL under `backend/db/migrations/` if your database predates newer columns (the API also runs some idempotent `ensure_*` steps on startup).
+
+### 3. Backend environment
 
 ```bash
 cp backend/.env.example backend/.env
-# Fill in your Postgres credentials
+# Set DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET
 ```
 
-### 5. Set up the database
+### 4. Frontend environment (local)
+
+Optional `.env` at the repo root for Vite:
 
 ```bash
-psql -U <your_user> -d <your_database> -f backend/db/schema.sql
+# .env.local
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
-### 6. Run the app
+### 5. Run locally
 
 ```bash
-# Frontend (from root)
+# Terminal 1 — API (from backend/)
+cd backend && npx tsx api.ts
+
+# Terminal 2 — UI (from repo root)
 npm run dev
-
-# Backend (from /backend)
-npx tsx api.ts
 ```
+
+Open the URL Vite prints (usually `http://localhost:5173`).
+
+### Docker (API only)
+
+```bash
+docker compose up --build
+```
+
+Uncomment `env_file` in `docker-compose.yml` or pass `DB_*` / `JWT_SECRET` so the container can reach Postgres.
 
 ---
 
-## 🌐 API Overview
+## Scripts
 
-| Method   | Endpoint                       | Description         |
-| -------- | ------------------------------ | ------------------- |
-| `GET`    | `/health`                      | Server health check |
-| `POST`   | `/api/users`                   | Create a user       |
-| `GET`    | `/api/users/:id`               | Get user profile    |
-| `PUT`    | `/api/users/:id`               | Update profile      |
-| `GET`    | `/api/users/:id/stats`         | Get stats & XP      |
-| `PUT`    | `/api/users/:id/stats`         | Update stats        |
-| `GET`    | `/api/tasks?userId=`           | Get all tasks       |
-| `GET`    | `/api/tasks?userId=&category=` | Filter by category  |
-| `POST`   | `/api/tasks`                   | Create a task       |
-| `PUT`    | `/api/tasks/:id`               | Update a task       |
-| `DELETE` | `/api/tasks/:id`               | Delete a task       |
+| Command | Where | Purpose |
+| --- | --- | --- |
+| `npm run dev` | root | Vite dev server |
+| `npm run build` | root | Production frontend build → `dist/` |
+| `npm run build` | `backend/` | Compile TypeScript → `backend/dist/` |
+| `npm start` | `backend/` | Run `node dist/api.js` after build |
+
+---
+
+## License
+
+Private / personal use unless you add a license file.
