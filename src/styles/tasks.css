@@ -1,15 +1,44 @@
 /* ── Task List ───────────────────────────────────────────────── */
 .task-box {
-  @apply bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-4 space-y-2;
+  @apply bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-4 flex flex-col gap-4;
+  overflow: visible;
 }
 
 .task-item {
-  @apply flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-green-500 transition-all duration-300 cursor-move;
+  @apply relative bg-white rounded-lg border border-gray-100 cursor-move;
+  overflow: visible;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Pop above siblings so the dropdown isn’t covered */
+.task-item.task-item-menu-expanded {
+  z-index: 40;
+}
+
+.task-item:hover:not(.task-completed) {
+  border-color: transparent;
+  background: linear-gradient(#fff, #fff) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
 }
 
 .task-item.task-completed {
-  @apply bg-green-50 border-green-200;
-  transition: all 0.3s ease-out;
+  @apply border-green-200 shadow-sm;
+}
+
+/* Sweeps left → right on complete; drains on uncomplete — matches bg-green-50 */
+.task-complete-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  background: #f0fdf4;
+  will-change: transform;
+  overflow: hidden;
+}
+
+.task-item-content {
+  @apply flex items-center gap-3 w-full relative z-[1] p-3;
 }
 
 .drag-handle {
@@ -51,29 +80,92 @@
   @apply text-sm text-gray-500 transition-all duration-300;
 }
 
-.task-delete-btn {
-  background: none;
-  border: none;
-  color: #e5e7eb;
-  cursor: pointer;
-  font-size: 0.72rem;
-  padding: 0.3rem;
-  border-radius: 4px;
-  transition: color 0.15s;
+.task-item-menu-wrap {
+  position: relative;
   flex-shrink: 0;
   opacity: 0;
+  transition: opacity 0.15s;
 }
 
-.task-item:hover .task-delete-btn {
+.task-item:hover .task-item-menu-wrap,
+.task-item-menu-wrap.task-item-menu-open {
   opacity: 1;
 }
 
-.task-delete-btn:hover {
-  color: #ef4444 !important;
+.task-item-menu-trigger {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.task-item-menu-trigger:hover {
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+.task-item-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 11rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  padding: 0.35rem 0;
+  list-style: none;
+  margin: 0;
+}
+
+.task-item-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+
+.task-item-menu button:hover {
+  background: #f9fafb;
+}
+
+.task-item-menu button.task-item-menu-danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.task-item-menu-icon {
+  width: 0.9rem;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 .add-task-card {
-  @apply flex items-center gap-3 p-4 bg-white rounded-lg border-2 border-dashed border-gray-200 hover:border-green-500 transition-colors duration-200 cursor-pointer mt-2;
+  @apply flex items-center gap-3 p-4 bg-white rounded-lg cursor-pointer;
+  border: 2px solid #e5e7eb;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.add-task-card:hover {
+  border-color: transparent;
+  background: linear-gradient(#fff, #fff) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 2px 10px rgba(21, 128, 61, 0.1);
 }
 
 .add-task-plus {

@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaSave, FaTimes, FaLayerGroup } from "react-icons/fa";
 import Modal from "react-modal";
 import { backlogApi, type BacklogTask } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 
 function Backlog() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [tasks, setTasks] = useState<BacklogTask[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newText, setNewText] = useState("");
@@ -30,6 +32,7 @@ function Backlog() {
   };
 
   const deleteTask = async (id: number) => {
+    if (!(await confirmDeletion("Delete this backlog task?"))) return;
     setTasks(tasks.filter((t) => t.id !== id));
     try {
       await backlogApi.delete(id);

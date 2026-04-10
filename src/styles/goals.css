@@ -22,9 +22,11 @@
   gap: 0.5rem;
 }
 
-.goal-card:hover {
+.goal-card:hover:not(.goal-card-achieved) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: #86efac;
+  border-color: transparent;
+  background: linear-gradient(#fff, #fff) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
 }
 
 .goal-card-achieved {
@@ -152,16 +154,18 @@
   gap: 0.75rem;
   padding: 1.1rem;
   background: white;
-  border: 2px dashed #d1d5db;
+  border: 2px solid #e5e7eb;
   border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
   min-height: 80px;
 }
 
 .goal-add-card:hover {
-  border-color: #22c55e;
-  background: #f0fdf4;
+  border-color: transparent;
+  background: linear-gradient(#f0fdf4, #f0fdf4) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 2px 10px rgba(21, 128, 61, 0.1);
 }
 
 .goal-add-icon {
@@ -298,7 +302,7 @@
 .goal-focus-pick {
   width: 100%;
   background: #f9fafb;
-  border: 1.5px dashed #d1d5db;
+  border: 1.5px solid #e5e7eb;
   border-radius: 8px;
   padding: 0.65rem 0.9rem;
   font-size: 0.88rem;
@@ -307,13 +311,15 @@
   text-align: left;
   display: flex;
   align-items: center;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .goal-focus-pick:hover {
-  border-color: #22c55e;
-  color: #22c55e;
-  background: #f0fdf4;
+  border-color: transparent;
+  color: #15803d;
+  background: linear-gradient(#f0fdf4, #f0fdf4) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 1px 6px rgba(21, 128, 61, 0.08);
 }
 
 .goal-focus-dropdown {

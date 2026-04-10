@@ -18,8 +18,10 @@
 }
 
 .recovery-stat-card:hover {
-  border-color: #86efac;
+  border-color: transparent;
   box-shadow: 0 4px 14px rgba(34, 197, 94, 0.08);
+  background: linear-gradient(#fff, #fff) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
 }
 
 .recovery-stat-icon {
@@ -222,7 +224,7 @@
   color: #9ca3af;
   text-align: center;
   font-size: 0.85rem;
-  border: 1.5px dashed #e5e7eb;
+  border: 1.5px solid #e5e7eb;
   border-radius: 12px;
 }
 

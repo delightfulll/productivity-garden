@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import Modal from "react-modal";
 import { milestonesApi, type Milestone } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -235,6 +236,7 @@ const HorizonSection = ({
 // ── Main component ────────────────────────────────────────────
 
 function Journey() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   // Modal state
@@ -331,6 +333,7 @@ function Journey() {
   // ── Delete ────────────────────────────────────────────────
 
   const handleDelete = async (id: number) => {
+    if (!(await confirmDeletion("Delete this milestone?"))) return;
     setMilestones((prev) => prev.filter((m) => m.id !== id));
     try {
       await milestonesApi.delete(id);

@@ -42,6 +42,20 @@ CREATE TABLE IF NOT EXISTS goals (
 );
 CREATE INDEX IF NOT EXISTS idx_goals_user_id ON goals(user_id);
 
+-- Milestones (Journey)
+CREATE TABLE IF NOT EXISTS milestones (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title       TEXT         NOT NULL,
+  description TEXT         NOT NULL DEFAULT '',
+  horizon     TEXT         NOT NULL CHECK (horizon IN ('long', 'mid', 'short')),
+  achieved    BOOLEAN      NOT NULL DEFAULT FALSE,
+  target_date TEXT         NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS milestones_user_id_idx ON milestones (user_id);
+CREATE INDEX IF NOT EXISTS milestones_horizon_idx ON milestones (horizon);
+
 -- Backlog tasks
 CREATE TABLE IF NOT EXISTS backlog_tasks (
   id         SERIAL PRIMARY KEY,
@@ -54,12 +68,14 @@ CREATE INDEX IF NOT EXISTS idx_backlog_user_id ON backlog_tasks(user_id);
 
 -- Journal entries
 CREATE TABLE IF NOT EXISTS journal_entries (
-  id         SERIAL PRIMARY KEY,
-  user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  entry      TEXT        NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  entry       TEXT        NOT NULL,
+  entry_date  DATE        NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_journal_user_id ON journal_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_journal_user_entry_date ON journal_entries (user_id, entry_date DESC);
 
 -- Wins
 CREATE TABLE IF NOT EXISTS wins (

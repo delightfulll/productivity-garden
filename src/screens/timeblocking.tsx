@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 import "../styles/TimeBlocking.css";
 import CustomCalendar from "../components/calendar";
 import { timeblockingApi, type TimeBlockingEvent } from "../lib/api";
@@ -29,6 +30,7 @@ const generateSlots = (): TimeSlot[] =>
   }));
 
 const TimeBlocking = () => {
+  const { confirmDeletion } = useConfirmDeletion();
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(generateSlots);
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [newEventTitle, setNewEventTitle] = useState("");
@@ -99,6 +101,7 @@ const TimeBlocking = () => {
   };
 
   const handleDeleteEvent = async (slotId: string, eventId: number) => {
+    if (!(await confirmDeletion("Delete this time block?"))) return;
     setTimeSlots((slots) =>
       slots.map((slot) =>
         slot.id === slotId

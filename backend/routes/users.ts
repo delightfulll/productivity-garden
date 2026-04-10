@@ -168,4 +168,29 @@ router.put("/:id/stats", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/users/:id/activity
+// Returns the last 10 activity items across tasks, wins, and journal entries
+router.get("/:id/activity", async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT type, content, category, created_at FROM (
+         SELECT 'task'    AS type, text    AS content, category,    created_at FROM tasks           WHERE user_id = $1 AND completed = true
+         UNION ALL
+         SELECT 'win'     AS type, content AS content, category,    created_at FROM wins            WHERE user_id = $1
+         UNION ALL
+         SELECT 'journal' AS type, entry   AS content, 'journal' AS category, created_at FROM journal_entries WHERE user_id = $1
+       ) combined
+       ORDER BY created_at DESC
+       LIMIT 10`,
+      [Number(id)],
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET /users/:id/activity error:", err);
+    res.status(500).json({ error: "Failed to fetch activity" });
+  }
+});
+
 export default router;

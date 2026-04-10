@@ -1,12 +1,34 @@
-const BASE = "http://localhost:3000";
+const BASE =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
+  "http://localhost:3000";
 
-// Change this to the logged-in user's ID when auth is added
-export const USER_ID = 1;
+// ── Auth helpers ──────────────────────────────────────────────
+
+function getToken(): string | null {
+  return localStorage.getItem("pg_token");
+}
+
+export function getUserId(): number {
+  // Decode the JWT payload (no crypto verification needed client-side)
+  const token = getToken();
+  if (!token) return 0;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.userId ?? 0;
+  } catch {
+    return 0;
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init?.headers ?? {}),
+    },
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -15,7 +37,45 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ── Tasks ────────────────────────────────────────────────────
+// ── Users / Stats ─────────────────────────────────────────────
+
+export interface UserStats {
+  streak: number;
+  tasks_done: number;
+  wins: number;
+  journal_count: number;
+  garden_level: number;
+  xp: number;
+  xp_max: number;
+}
+
+export interface ActivityItem {
+  type: "task" | "win" | "journal";
+  content: string;
+  category: string;
+  created_at: string;
+}
+
+export interface UserProfile {
+  id: number;
+  name: string;
+  bio: string;
+  focus_areas: string[];
+  created_at: string;
+}
+
+export const usersApi = {
+  getProfile: (userId: number) =>
+    request<UserProfile>(`/api/users/${userId}`),
+  updateProfile: (userId: number, data: { name?: string; bio?: string; focus_areas?: string[] }) =>
+    request<UserProfile>(`/api/users/${userId}`, { method: "PUT", body: JSON.stringify(data) }),
+  getStats: (userId: number) =>
+    request<UserStats>(`/api/users/${userId}/stats`),
+  getActivity: (userId: number) =>
+    request<ActivityItem[]>(`/api/users/${userId}/activity`),
+};
+
+// ── Tasks ─────────────────────────────────────────────────────
 
 export interface Task {
   id: number;
@@ -30,16 +90,18 @@ export interface Task {
 
 export const tasksApi = {
   list: (category?: string) =>
-    request<Task[]>(`/api/tasks?userId=${USER_ID}${category ? `&category=${category}` : ""}`),
+    request<Task[]>(`/api/tasks?userId=${getUserId()}${category ? `&category=${category}` : ""}`),
   create: (data: { text: string; date?: string; category: string; sort_order?: number }) =>
-    request<Task>("/api/tasks", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<Task>("/api/tasks", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   update: (id: number, data: Partial<{ text: string; date: string; completed: boolean; sort_order: number }>) =>
     request<Task>(`/api/tasks/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/tasks/${id}`, { method: "DELETE" }),
+  rollover: (id: number) =>
+    request<Task>(`/api/tasks/${id}/rollover`, { method: "POST" }),
 };
 
-// ── Goals ────────────────────────────────────────────────────
+// ── Goals ─────────────────────────────────────────────────────
 
 export interface Goal {
   id: number;
@@ -52,16 +114,16 @@ export interface Goal {
 }
 
 export const goalsApi = {
-  list: () => request<Goal[]>(`/api/goals?userId=${USER_ID}`),
+  list: () => request<Goal[]>(`/api/goals?userId=${getUserId()}`),
   create: (data: { title: string; description?: string; target_date?: string }) =>
-    request<Goal>("/api/goals", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<Goal>("/api/goals", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   update: (id: number, data: Partial<{ title: string; description: string; target_date: string; achieved: boolean }>) =>
     request<Goal>(`/api/goals/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/goals/${id}`, { method: "DELETE" }),
 };
 
-// ── Backlog ──────────────────────────────────────────────────
+// ── Backlog ───────────────────────────────────────────────────
 
 export interface BacklogTask {
   id: number;
@@ -72,33 +134,38 @@ export interface BacklogTask {
 }
 
 export const backlogApi = {
-  list: () => request<BacklogTask[]>(`/api/backlog?userId=${USER_ID}`),
+  list: () => request<BacklogTask[]>(`/api/backlog?userId=${getUserId()}`),
   create: (data: { text: string; note?: string }) =>
-    request<BacklogTask>("/api/backlog", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<BacklogTask>("/api/backlog", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/backlog/${id}`, { method: "DELETE" }),
 };
 
-// ── Journal ──────────────────────────────────────────────────
+// ── Journal ───────────────────────────────────────────────────
 
 export interface JournalEntry {
   id: number;
   user_id: number;
   entry: string;
+  /** Calendar day YYYY-MM-DD (user-selected; may differ from created_at for backdated entries) */
+  entry_date?: string;
   created_at: string;
 }
 
 export const journalApi = {
-  list: () => request<JournalEntry[]>(`/api/journal?userId=${USER_ID}`),
-  create: (entry: string) =>
-    request<JournalEntry>("/api/journal", { method: "POST", body: JSON.stringify({ user_id: USER_ID, entry }) }),
+  list: () => request<JournalEntry[]>(`/api/journal?userId=${getUserId()}`),
+  create: (entry: string, entry_date: string) =>
+    request<JournalEntry>("/api/journal", {
+      method: "POST",
+      body: JSON.stringify({ user_id: getUserId(), entry, entry_date }),
+    }),
   update: (id: number, entry: string) =>
     request<JournalEntry>(`/api/journal/${id}`, { method: "PUT", body: JSON.stringify({ entry }) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/journal/${id}`, { method: "DELETE" }),
 };
 
-// ── Wins ─────────────────────────────────────────────────────
+// ── Wins ──────────────────────────────────────────────────────
 
 export interface Win {
   id: number;
@@ -110,9 +177,9 @@ export interface Win {
 
 export const winsApi = {
   list: (category?: string) =>
-    request<Win[]>(`/api/wins?userId=${USER_ID}${category ? `&category=${category}` : ""}`),
+    request<Win[]>(`/api/wins?userId=${getUserId()}${category ? `&category=${category}` : ""}`),
   create: (data: { category: string; content: string }) =>
-    request<Win>("/api/wins", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<Win>("/api/wins", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/wins/${id}`, { method: "DELETE" }),
 };
@@ -132,9 +199,9 @@ export interface TimeBlockingEvent {
 
 export const timeblockingApi = {
   list: (date?: string) =>
-    request<TimeBlockingEvent[]>(`/api/timeblocking?userId=${USER_ID}${date ? `&date=${date}` : ""}`),
+    request<TimeBlockingEvent[]>(`/api/timeblocking?userId=${getUserId()}${date ? `&date=${date}` : ""}`),
   create: (data: { slot_id: string; title: string; description?: string; color?: string; event_date?: string }) =>
-    request<TimeBlockingEvent>("/api/timeblocking", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<TimeBlockingEvent>("/api/timeblocking", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   delete: (id: number) =>
     request<{ message: string }>(`/api/timeblocking/${id}`, { method: "DELETE" }),
 };
@@ -154,9 +221,9 @@ export interface Milestone {
 
 export const milestonesApi = {
   list: (horizon?: string) =>
-    request<Milestone[]>(`/api/milestones?userId=${USER_ID}${horizon ? `&horizon=${horizon}` : ""}`),
+    request<Milestone[]>(`/api/milestones?userId=${getUserId()}${horizon ? `&horizon=${horizon}` : ""}`),
   create: (data: { title: string; horizon: "long" | "mid" | "short"; description?: string; target_date?: string }) =>
-    request<Milestone>("/api/milestones", { method: "POST", body: JSON.stringify({ user_id: USER_ID, ...data }) }),
+    request<Milestone>("/api/milestones", { method: "POST", body: JSON.stringify({ user_id: getUserId(), ...data }) }),
   update: (id: number, data: Partial<{ title: string; description: string; target_date: string; achieved: boolean; horizon: string }>) =>
     request<Milestone>(`/api/milestones/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: number) =>
@@ -173,11 +240,11 @@ export interface Checkin {
 }
 
 export const addictionsApi = {
-  listCheckins: () => request<Checkin[]>(`/api/addictions/checkins?userId=${USER_ID}`),
-  getStreak: () => request<{ streak: number; last_checkin: string | null }>(`/api/addictions/streak?userId=${USER_ID}`),
+  listCheckins: () => request<Checkin[]>(`/api/addictions/checkins?userId=${getUserId()}`),
+  getStreak: () => request<{ streak: number; last_checkin: string | null }>(`/api/addictions/streak?userId=${getUserId()}`),
   checkIn: (stayed_clean: boolean) =>
     request<{ checkin: Checkin; streak: number }>("/api/addictions/checkins", {
       method: "POST",
-      body: JSON.stringify({ user_id: USER_ID, stayed_clean }),
+      body: JSON.stringify({ user_id: getUserId(), stayed_clean }),
     }),
 };

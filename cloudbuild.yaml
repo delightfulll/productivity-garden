@@ -1,0 +1,37 @@
+# Google Cloud Build: build and push both images to Artifact Registry.
+# Replace PROJECT_ID, REGION, and REPO with your values, then:
+#
+#   gcloud builds submit --config=cloudbuild.yaml \
+#     --substitutions=_BACKEND_IMAGE=REGION-docker.pkg.dev/PROJECT_ID/REPO/pg-backend,_FRONTEND_IMAGE=REGION-docker.pkg.dev/PROJECT_ID/REPO/pg-frontend,_VITE_API_BASE_URL=https://YOUR-BACKEND-URL
+#
+# Deploy each image to Cloud Run with the console or:
+#   gcloud run deploy pg-backend --image ... --set-secrets ...
+#   gcloud run deploy pg-frontend --image ...
+#
+substitutions:
+  _BACKEND_IMAGE: us-central1-docker.pkg.dev/PROJECT_ID/REPO/pg-backend
+  _FRONTEND_IMAGE: us-central1-docker.pkg.dev/PROJECT_ID/REPO/pg-frontend
+  _VITE_API_BASE_URL: ""
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - backend/Dockerfile
+      - -t
+      - ${_BACKEND_IMAGE}
+      - backend
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile
+      - -t
+      - ${_FRONTEND_IMAGE}
+      - --build-arg
+      - VITE_API_BASE_URL=${_VITE_API_BASE_URL}
+      - .
+images:
+  - ${_BACKEND_IMAGE}
+  - ${_FRONTEND_IMAGE}

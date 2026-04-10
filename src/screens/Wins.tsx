@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaTimes, FaSave, FaTrash, FaChevronDown } from "react-icons/fa";
 import Modal from "react-modal";
 import { winsApi, type Win } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 
 type WinCategory = "physical" | "mental" | "spiritual";
 
@@ -158,6 +159,7 @@ const WinSection = ({ config, wins, onAdd, onDelete }: WinSectionProps) => {
 };
 
 function Wins() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winEntry, setWinEntry] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<WinCategory>("physical");
@@ -182,6 +184,7 @@ function Wins() {
   };
 
   const handleDeleteWin = async (id: number) => {
+    if (!(await confirmDeletion("Delete this win?"))) return;
     setWins(wins.filter((w) => w.id !== id));
     try {
       await winsApi.delete(id);

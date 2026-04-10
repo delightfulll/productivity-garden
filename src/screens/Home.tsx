@@ -1,123 +1,254 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { tasksApi, type Task } from "../lib/api";
 import { motion, Reorder, AnimatePresence, LayoutGroup } from "framer-motion";
-import { FaPlus, FaGripVertical, FaSave, FaTimes, FaTrash } from "react-icons/fa";
+import {
+  FaPlus,
+  FaGripVertical,
+  FaSave,
+  FaTimes,
+  FaTrash,
+  FaEllipsisV,
+  FaForward,
+} from "react-icons/fa";
 import "../styles/index.css";
 import CustomCalendar from "../components/calendar";
 import Modal from "react-modal";
+import XPBar from "../components/XPBar";
+import { useStats } from "../context/StatsContext";
 import Goals from "./Goals";
 import Backlog from "./Backlog";
 import GoalFocus from "../components/GoalFocus";
+import { playTaskCompleteSound } from "../lib/taskCompleteSound";
+import { useConfirm, useConfirmDeletion } from "../context/ConfirmContext";
+import { useDayParam } from "../hooks/useDayParam";
+import {
+  taskBelongsOnDay,
+  parseLocalDayKey,
+} from "../lib/dateUtils";
 
 type ActiveTab = "tasks" | "goals" | "backlog";
 
 interface TaskItemProps {
   task: Task;
   category: string;
-  onComplete: (taskId: number, category: string, currentCompleted: boolean) => void;
+  onComplete: (
+    taskId: number,
+    category: string,
+    currentCompleted: boolean,
+  ) => void;
   onDelete: (taskId: number, category: string) => void;
+  onRollOver: (taskId: number, category: string) => void;
   taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
-const TaskItem = React.memo(({ task, category, onComplete, onDelete, taskRefs }: TaskItemProps) => (
-  <motion.div
-    className={`task-item ${task.completed ? "task-completed" : ""}`}
-    ref={(el) => {
-      if (el) taskRefs.current[task.id] = el;
-    }}
-  >
+function TaskItem({
+  task,
+  category,
+  onComplete,
+  onDelete,
+  onRollOver,
+  taskRefs,
+}: TaskItemProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [menuOpen]);
+
+  return (
     <motion.div
-      className="drag-handle"
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      className={`task-item ${task.completed ? "task-completed" : ""} ${menuOpen ? "task-item-menu-expanded" : ""}`}
+      ref={(el) => {
+        if (el) taskRefs.current[task.id] = el;
+      }}
     >
-      <FaGripVertical />
+      <motion.div
+        className="task-complete-fill"
+        aria-hidden
+        initial={false}
+        animate={{ scaleX: task.completed ? 1 : 0 }}
+        transition={{
+          duration: task.completed ? 0.55 : 0.4,
+          ease: task.completed ? [0.22, 1, 0.36, 1] : [0.4, 0, 0.2, 1],
+        }}
+        style={{ transformOrigin: "left center" }}
+      />
+      <div className="task-item-content">
+        <motion.div
+          className="drag-handle"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <FaGripVertical />
+        </motion.div>
+        <motion.input
+          type="checkbox"
+          className="task-checkbox"
+          checked={task.completed}
+          onChange={() => {
+            if (!task.completed) playTaskCompleteSound();
+            onComplete(task.id, category, task.completed);
+          }}
+          whileTap={{ scale: 0.9 }}
+        />
+        <span className={`task-text ${task.completed ? "completed" : ""}`}>
+          {task.text}
+        </span>
+        <span className="task-date">{task.date}</span>
+        <div
+          className={`task-item-menu-wrap ${menuOpen ? "task-item-menu-open" : ""}`}
+          ref={menuRef}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="task-item-menu-trigger"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            title="Task actions"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <FaEllipsisV />
+          </button>
+          {menuOpen && (
+            <ul className="task-item-menu" role="menu">
+              <li>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onRollOver(task.id, category);
+                  }}
+                >
+                  <FaForward className="task-item-menu-icon" />
+                  Roll to next day
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="task-item-menu-danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete(task.id, category);
+                  }}
+                >
+                  <FaTrash className="task-item-menu-icon" />
+                  Delete
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
+      </div>
     </motion.div>
-    <motion.input
-      type="checkbox"
-      className="task-checkbox"
-      checked={task.completed}
-      onChange={() => onComplete(task.id, category, task.completed)}
-      whileTap={{ scale: 0.9 }}
-    />
-    <span className={`task-text ${task.completed ? "completed" : ""}`}>
-      {task.text}
-    </span>
-    <span className="task-date">{task.date}</span>
-    <motion.button
-      className="task-delete-btn"
-      onClick={() => onDelete(task.id, category)}
-      whileHover={{ scale: 1.15 }}
-      whileTap={{ scale: 0.9 }}
-      title="Delete task"
-    >
-      <FaTrash />
-    </motion.button>
-  </motion.div>
-));
+  );
+}
 
 interface TaskSectionProps {
   title: string;
   subtitle: string;
   tasks: Task[];
   category: "watering" | "sunlight" | "composting";
-  onReorder: React.Dispatch<React.SetStateAction<Task[]>>;
-  onComplete: (taskId: number, category: string, currentCompleted: boolean) => void;
+  onReorder: (newOrder: Task[]) => void;
+  onComplete: (
+    taskId: number,
+    category: string,
+    currentCompleted: boolean,
+  ) => void;
   onDelete: (taskId: number, category: string) => void;
+  onRollOver: (taskId: number, category: string) => void;
   onAddClick: (category: "watering" | "sunlight" | "composting") => void;
   taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
-const TaskSection = React.memo(({
-  title, subtitle, tasks, category,
-  onReorder, onComplete, onDelete, onAddClick, taskRefs,
-}: TaskSectionProps) => (
-  <>
-    <h2 className="content-title" style={category !== "watering" ? { marginTop: "1.5rem" } : undefined}>{title}</h2>
-    <p className="content-text">{subtitle}</p>
-    <LayoutGroup id={category}>
-    <Reorder.Group
-      axis="y"
-      values={tasks}
-      onReorder={onReorder}
-      className="task-box"
-      layoutScroll
-    >
-      <AnimatePresence mode="popLayout">
-        {tasks.map((task) => (
-          <Reorder.Item
-            key={task.id}
-            value={task}
-            whileDrag={{ scale: 1.03, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" }}
-            transition={{ duration: 0.2 }}
+const TaskSection = React.memo(
+  ({
+    title,
+    subtitle,
+    tasks,
+    category,
+    onReorder,
+    onComplete,
+    onDelete,
+    onRollOver,
+    onAddClick,
+    taskRefs,
+  }: TaskSectionProps) => {
+    return (
+      <>
+        <div
+          className="section-header"
+          style={category !== "watering" ? { marginTop: "1.75rem" } : undefined}
+        >
+          <h2 className={`section-title section-title-${category}`}>{title}</h2>
+        </div>
+        <p className="section-subtitle">{subtitle}</p>
+        <LayoutGroup id={category}>
+          <Reorder.Group
+            axis="y"
+            values={tasks}
+            onReorder={onReorder}
+            className="task-box"
+            layoutScroll
           >
-            <TaskItem
-              task={task}
-              category={category}
-              onComplete={onComplete}
-              onDelete={onDelete}
-              taskRefs={taskRefs}
-            />
-          </Reorder.Item>
-        ))}
-      </AnimatePresence>
-      <motion.div
-        className="add-task-card"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => onAddClick(category)}
-      >
-        <FaPlus className="add-task-plus" />
-        <span className="add-task-input">Add a new {category} task...</span>
-      </motion.div>
-    </Reorder.Group>
-    </LayoutGroup>
-  </>
-));
+            <AnimatePresence mode="popLayout">
+              {tasks.map((task) => (
+                <Reorder.Item
+                  key={task.id}
+                  value={task}
+                  whileDrag={{
+                    scale: 1.03,
+                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TaskItem
+                    task={task}
+                    category={category}
+                    onComplete={onComplete}
+                    onDelete={onDelete}
+                    onRollOver={onRollOver}
+                    taskRefs={taskRefs}
+                  />
+                </Reorder.Item>
+              ))}
+            </AnimatePresence>
+            <motion.div
+              className="add-task-card"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onAddClick(category)}
+            >
+              <FaPlus className="add-task-plus" />
+              <span className="add-task-input">
+                Add a new {category} task...
+              </span>
+            </motion.div>
+          </Reorder.Group>
+        </LayoutGroup>
+      </>
+    );
+  },
+);
 
 function Home() {
+  const { refreshStats } = useStats();
+  const { confirmDeletion } = useConfirmDeletion();
+  const { confirm } = useConfirm();
+  const { dayKey, selectedDate, setDayFromDate } = useDayParam();
   const [activeTab, setActiveTab] = useState<ActiveTab>("tasks");
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiPosition, setConfettiPosition] = useState({
@@ -147,44 +278,76 @@ function Home() {
   const [sunlightTasks, setSunlightTasks] = useState<Task[]>([]);
   const [compostingTasks, setCompostingTasks] = useState<Task[]>([]);
 
+  const wateringForDay = useMemo(
+    () => wateringTasks.filter((t) => taskBelongsOnDay(t.date, dayKey)),
+    [wateringTasks, dayKey],
+  );
+  const sunlightForDay = useMemo(
+    () => sunlightTasks.filter((t) => taskBelongsOnDay(t.date, dayKey)),
+    [sunlightTasks, dayKey],
+  );
+  const compostingForDay = useMemo(
+    () => compostingTasks.filter((t) => taskBelongsOnDay(t.date, dayKey)),
+    [compostingTasks, dayKey],
+  );
+
+  const mergeReorder = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<Task[]>>, next: Task[]) => {
+      setter((all) => {
+        const ids = new Set(next.map((t) => t.id));
+        return [...all.filter((t) => !ids.has(t.id)), ...next];
+      });
+    },
+    [],
+  );
+
   // Load tasks from API on mount
   useEffect(() => {
-    tasksApi.list().then((all) => {
-      setWateringTasks(all.filter((t) => t.category === "watering"));
-      setSunlightTasks(all.filter((t) => t.category === "sunlight"));
-      setCompostingTasks(all.filter((t) => t.category === "composting"));
-    }).catch((err) => console.error("Failed to load tasks:", err));
+    tasksApi
+      .list()
+      .then((all) => {
+        setWateringTasks(all.filter((t) => t.category === "watering"));
+        setSunlightTasks(all.filter((t) => t.category === "sunlight"));
+        setCompostingTasks(all.filter((t) => t.category === "composting"));
+      })
+      .catch((err) => console.error("Failed to load tasks:", err));
   }, []);
 
-  const handleTaskComplete = useCallback((taskId: number, category: string, currentCompleted: boolean) => {
-    const taskElement = taskRefs.current[taskId];
-    if (!taskElement) return;
+  const handleTaskComplete = useCallback(
+    (taskId: number, category: string, currentCompleted: boolean) => {
+      const taskElement = taskRefs.current[taskId];
+      if (!taskElement) return;
 
-    const rect = taskElement.getBoundingClientRect();
-    const newCompleted = !currentCompleted;
+      const rect = taskElement.getBoundingClientRect();
+      const newCompleted = !currentCompleted;
 
-    const updateTasks = (tasks: Task[]) =>
-      tasks.map((task) => task.id === taskId ? { ...task, completed: newCompleted } : task);
+      const updateTasks = (tasks: Task[]) =>
+        tasks.map((task) =>
+          task.id === taskId ? { ...task, completed: newCompleted } : task,
+        );
 
-    switch (category) {
-      case "watering":   setWateringTasks(updateTasks); break;
-      case "sunlight":   setSunlightTasks(updateTasks); break;
-      case "composting": setCompostingTasks(updateTasks); break;
-    }
+      switch (category) {
+        case "watering":
+          setWateringTasks(updateTasks);
+          break;
+        case "sunlight":
+          setSunlightTasks(updateTasks);
+          break;
+        case "composting":
+          setCompostingTasks(updateTasks);
+          break;
+      }
 
-    tasksApi.update(taskId, { completed: newCompleted }).catch((err) =>
-      console.error("Failed to update task:", err)
-    );
-
-    requestAnimationFrame(() => {
-      setConfettiPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2 - 80,
-      });
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2000);
-    });
-  }, [taskRefs]);
+      tasksApi
+        .update(taskId, { completed: newCompleted })
+        .then(() => refreshStats())
+        .catch((err) => {
+          console.error("Failed to update task:", err);
+          refreshStats();
+        });
+    },
+    [taskRefs, refreshStats],
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState("");
@@ -199,14 +362,20 @@ function Home() {
     try {
       const created = await tasksApi.create({
         text: newTaskText.trim(),
-        date: newTaskDate || "No date",
+        date: newTaskDate.trim() || dayKey,
         category: activeCategory,
       });
 
       switch (activeCategory) {
-        case "watering":   setWateringTasks((t) => [...t, created]); break;
-        case "sunlight":   setSunlightTasks((t) => [...t, created]); break;
-        case "composting": setCompostingTasks((t) => [...t, created]); break;
+        case "watering":
+          setWateringTasks((t) => [...t, created]);
+          break;
+        case "sunlight":
+          setSunlightTasks((t) => [...t, created]);
+          break;
+        case "composting":
+          setCompostingTasks((t) => [...t, created]);
+          break;
       }
     } catch (err) {
       console.error("Failed to create task:", err);
@@ -216,27 +385,68 @@ function Home() {
     setNewTaskDate("");
     setIsModalOpen(false);
     setActiveCategory(null);
-  }, [newTaskText, newTaskDate, activeCategory]);
+  }, [newTaskText, newTaskDate, activeCategory, dayKey]);
 
-  const handleDeleteTask = useCallback(async (taskId: number, category: string) => {
-    switch (category) {
-      case "watering":   setWateringTasks((t) => t.filter((x) => x.id !== taskId)); break;
-      case "sunlight":   setSunlightTasks((t) => t.filter((x) => x.id !== taskId)); break;
-      case "composting": setCompostingTasks((t) => t.filter((x) => x.id !== taskId)); break;
-    }
-    try {
-      await tasksApi.delete(taskId);
-    } catch (err) {
-      console.error("Failed to delete task:", err);
-    }
-  }, []);
+  const handleDeleteTask = useCallback(
+    async (taskId: number, category: string) => {
+      if (!(await confirmDeletion("Delete this task?"))) return;
+      switch (category) {
+        case "watering":
+          setWateringTasks((t) => t.filter((x) => x.id !== taskId));
+          break;
+        case "sunlight":
+          setSunlightTasks((t) => t.filter((x) => x.id !== taskId));
+          break;
+        case "composting":
+          setCompostingTasks((t) => t.filter((x) => x.id !== taskId));
+          break;
+      }
+      try {
+        await tasksApi.delete(taskId);
+      } catch (err) {
+        console.error("Failed to delete task:", err);
+      }
+    },
+    [confirmDeletion],
+  );
 
-  const openAddTaskModal = useCallback((
-    category: "watering" | "sunlight" | "composting",
-  ) => {
-    setActiveCategory(category);
-    setIsModalOpen(true);
-  }, []);
+  const handleRollOverTask = useCallback(
+    async (taskId: number, _category: string) => {
+      if (
+        !(await confirm({
+          title: "Roll over to next day?",
+          message:
+            "This task moves to the next calendar day. Any other tasks already on that day in this category will be removed.",
+          confirmLabel: "Roll over",
+        }))
+      ) {
+        return;
+      }
+      try {
+        const updated = await tasksApi.rollover(taskId);
+        const all = await tasksApi.list();
+        setWateringTasks(all.filter((t) => t.category === "watering"));
+        setSunlightTasks(all.filter((t) => t.category === "sunlight"));
+        setCompostingTasks(all.filter((t) => t.category === "composting"));
+        setDayFromDate(parseLocalDayKey(updated.date));
+      } catch (err) {
+        console.error("Failed to roll task over:", err);
+        const msg =
+          err instanceof Error ? err.message : "Could not roll task over.";
+        window.alert(msg);
+      }
+    },
+    [setDayFromDate, confirm],
+  );
+
+  const openAddTaskModal = useCallback(
+    (category: "watering" | "sunlight" | "composting") => {
+      setActiveCategory(category);
+      setNewTaskDate(dayKey);
+      setIsModalOpen(true);
+    },
+    [dayKey],
+  );
 
   return (
     <div className="app-container">
@@ -266,29 +476,34 @@ function Home() {
           <div className="home-header">
             <div className="welcome-section">
               <motion.h2
-                className="content-title"
+                className="welcome-title"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                Welcome Back, Vinay
+                Welcome Back, Vinay 🌱
               </motion.h2>
               <motion.p
-                className="content-text"
+                className="welcome-subtitle"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
-                Let the flowers blossom today!
+                Let the flowers blossom today.
               </motion.p>
-              <motion.p
-                className="content-text"
+              <motion.span
+                className="welcome-date"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                {new Date().toLocaleDateString()}
-              </motion.p>
+                {selectedDate.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </motion.span>
             </div>
           </div>
 
@@ -307,37 +522,40 @@ function Home() {
 
           {/* Tab Content */}
           {activeTab === "tasks" && (
-            <div>
+            <div key={dayKey} className="home-tasks-day">
               <TaskSection
+                category="watering"
                 title="Watering Tasks"
                 subtitle="These tasks move the needle"
-                tasks={wateringTasks}
-                category="watering"
-                onReorder={setWateringTasks}
+                tasks={wateringForDay}
+                onReorder={(next) => mergeReorder(setWateringTasks, next)}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
+                onRollOver={handleRollOverTask}
                 onAddClick={openAddTaskModal}
                 taskRefs={taskRefs}
               />
               <TaskSection
                 title="Sunlight Tasks"
                 subtitle="These tasks keep your goal alive"
-                tasks={sunlightTasks}
+                tasks={sunlightForDay}
                 category="sunlight"
-                onReorder={setSunlightTasks}
+                onReorder={(next) => mergeReorder(setSunlightTasks, next)}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
+                onRollOver={handleRollOverTask}
                 onAddClick={openAddTaskModal}
                 taskRefs={taskRefs}
               />
               <TaskSection
                 title="Composting"
                 subtitle="These tasks are extraneous things not necessarily important"
-                tasks={compostingTasks}
+                tasks={compostingForDay}
                 category="composting"
-                onReorder={setCompostingTasks}
+                onReorder={(next) => mergeReorder(setCompostingTasks, next)}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
+                onRollOver={handleRollOverTask}
                 onAddClick={openAddTaskModal}
                 taskRefs={taskRefs}
               />
@@ -350,6 +568,7 @@ function Home() {
         </div>
       </div>
       <div className="calendar-container">
+        <XPBar />
         <CustomCalendar />
         <GoalFocus />
       </div>

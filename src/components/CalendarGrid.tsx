@@ -1,60 +1,47 @@
-import React, { useState } from "react";
+import React from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../styles/App.css";
+import { useDayParam } from "../hooks/useDayParam";
+import { formatLocalDayKey } from "../lib/dateUtils";
 
 type Value = Date | [Date, Date] | null;
 
 const CalendarGrid = () => {
-  const [date, setDate] = useState<Value>(new Date());
+  const { dayKey, selectedDate, setDayFromDate } = useDayParam();
+
+  const todayKey = formatLocalDayKey(new Date());
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const yesterdayKey = formatLocalDayKey(yesterday);
+  const tomorrowKey = formatLocalDayKey(tomorrow);
 
   const goToYesterday = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    setDate(yesterday);
+    setDayFromDate(yesterday);
   };
 
   const goToToday = () => {
-    const today = new Date();
-    if (date instanceof Date && date.toDateString() === today.toDateString()) {
-      return;
-    }
-    setDate(today);
+    setDayFromDate(new Date());
   };
 
   const goToTomorrow = () => {
-    //only be able to press it once a day
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (
-      date instanceof Date &&
-      date.toDateString() === tomorrow.toDateString()
-    ) {
-      return;
-    }
-    setDate(tomorrow);
+    setDayFromDate(tomorrow);
   };
 
-  const isYesterday =
-    date instanceof Date &&
-    date.toDateString() === (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })().toDateString();
-
-  const isToday =
-    date instanceof Date &&
-    date.toDateString() === new Date().toDateString();
-
-  const isTomorrow =
-    date instanceof Date &&
-    date.toDateString() === (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })().toDateString();
+  const isYesterday = dayKey === yesterdayKey;
+  const isToday = dayKey === todayKey;
+  const isTomorrow = dayKey === tomorrowKey;
 
   return (
     <div className="calendar-grid-wrapper">
       <Calendar
         className="react-calendar"
         tileClassName="react-calendar__tile"
-        value={date}
-        onChange={(value) => setDate(value as Value)}
+        value={selectedDate}
+        onChange={(value) => setDayFromDate(value as Date)}
         showNavigation={true}
         showDoubleView={false}
         formatShortWeekday={(locale, date) =>
@@ -62,9 +49,15 @@ const CalendarGrid = () => {
         }
       />
       <div className="calendar-controls">
-        <button className={isYesterday ? "active" : ""} onClick={goToYesterday}>Yesterday</button>
-        <button className={isToday ? "active" : ""} onClick={goToToday}>Today</button>
-        <button className={isTomorrow ? "active" : ""} onClick={goToTomorrow}>Tomorrow</button>
+        <button type="button" className={isYesterday ? "active" : ""} onClick={goToYesterday}>
+          Yesterday
+        </button>
+        <button type="button" className={isToday ? "active" : ""} onClick={goToToday}>
+          Today
+        </button>
+        <button type="button" className={isTomorrow ? "active" : ""} onClick={goToTomorrow}>
+          Tomorrow
+        </button>
       </div>
     </div>
   );

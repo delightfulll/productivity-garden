@@ -47,6 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+
 // PUT /api/milestones/:id
 // Body: { title?, description?, target_date?, achieved?, horizon? }
 router.put("/:id", async (req: Request, res: Response) => {

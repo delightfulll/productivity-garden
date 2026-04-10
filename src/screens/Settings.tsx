@@ -3,8 +3,10 @@ import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaDownload, FaTrash } from "react-icons/fa";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 
 function Settings() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [cleared, setCleared] = useState(false);
   const [exported, setExported] = useState(false);
 
@@ -29,7 +31,15 @@ function Settings() {
     setTimeout(() => setExported(false), 2500);
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
+    if (
+      !(await confirmDeletion(
+        "Clear all data stored in this browser? You will be signed out and local settings will be lost.",
+        { title: "Clear local data?", confirmLabel: "Clear" },
+      ))
+    ) {
+      return;
+    }
     localStorage.clear();
     setCleared(true);
     setTimeout(() => setCleared(false), 2500);

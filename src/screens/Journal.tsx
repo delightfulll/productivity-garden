@@ -5,6 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaPen, FaTimes, FaSave, FaTrash, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import Modal from "react-modal";
 import { journalApi, type JournalEntry } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
+
+/** Calendar day for grouping (user-chosen date, or legacy: created_at local day). */
+function entryDayKey(e: JournalEntry): string {
+  const d = e.entry_date;
+  if (d != null && String(d).trim() !== "") {
+    const s = String(d);
+    return s.length >= 10 ? s.slice(0, 10) : s;
+  }
+  return dateToKey(new Date(e.created_at));
+}
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -68,6 +79,7 @@ function formatWeekRange(weekOffset: number): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 function Journal() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [journalEntry, setJournalEntry] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -106,12 +118,7 @@ function Journal() {
     }
   };
 
-  const filteredEntries = entries.filter(
-    (e) => {
-      const d = new Date(e.created_at);
-      return dateToKey(d) === selectedDate;
-    }
-  );
+  const filteredEntries = entries.filter((e) => entryDayKey(e) === selectedDate);
 
   const handleSave = async () => {
     if (!journalEntry.trim()) return;
@@ -120,12 +127,8 @@ function Journal() {
         const updated = await journalApi.update(editingId, journalEntry);
         setEntries(entries.map((e) => (e.id === editingId ? updated : e)));
       } else {
-        const created = await journalApi.create(journalEntry);
+        const created = await journalApi.create(journalEntry, selectedDate);
         setEntries([created, ...entries]);
-        // Jump to the week that contains the new entry
-        const createdKey = dateToKey(new Date(created.created_at));
-        setSelectedDate(createdKey);
-        setWeekOffset(0); // new entries are always today (current week)
       }
     } catch (err) {
       console.error("Failed to save journal entry:", err);
@@ -136,6 +139,7 @@ function Journal() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!(await confirmDeletion("Delete this journal entry?"))) return;
     setEntries(entries.filter((e) => e.id !== id));
     try {
       await journalApi.delete(id);
@@ -238,9 +242,7 @@ function Journal() {
                 const { dayName, dayNum, month } = formatChip(key);
                 const isSelected = key === selectedDate;
                 const isCurrentDay = key === todayKey();
-                const hasEntries = entries.some(
-                  (e) => dateToKey(new Date(e.created_at)) === key
-                );
+                const hasEntries = entries.some((e) => entryDayKey(e) === key);
 
                 return (
                   <motion.button

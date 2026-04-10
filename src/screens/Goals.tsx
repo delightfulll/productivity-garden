@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaPlus, FaSave, FaTimes, FaSeedling, FaCheck } from "react-icons/fa";
 import Modal from "react-modal";
 import { goalsApi, type Goal } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 
 function Goals() {
+  const { confirmDeletion } = useConfirmDeletion();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -49,6 +51,7 @@ function Goals() {
   };
 
   const deleteGoal = async (id: number) => {
+    if (!(await confirmDeletion("Delete this goal?"))) return;
     setGoals(goals.filter((g) => g.id !== id));
     try {
       await goalsApi.delete(id);

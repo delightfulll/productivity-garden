@@ -263,9 +263,10 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
-.timer-modal-task-item:hover {
-  border-color: #86efac;
-  background: #f0fdf4;
+.timer-modal-task-item:hover:not(.timer-modal-task-selected) {
+  border-color: transparent;
+  background: linear-gradient(#f0fdf4, #f0fdf4) padding-box, var(--pg-hover-border-gradient) border-box;
+  background-clip: padding-box, border-box;
 }
 
 .timer-modal-task-selected {
