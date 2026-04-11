@@ -1,7 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
-  <rect width="32" height="32" rx="7" fill="#15803d"/>
-  <rect x="14.5" y="14" width="3" height="11" rx="1.5" fill="#fefce8"/>
-  <ellipse cx="11" cy="12" rx="6" ry="4" transform="rotate(-50 11 12)" fill="#bbf7d0"/>
-  <ellipse cx="21" cy="12" rx="6" ry="4" transform="rotate(50 21 12)" fill="#86efac"/>
-  <ellipse cx="16" cy="9" rx="5" ry="3.5" fill="#ecfccb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true">
+  <defs>
+    <linearGradient id="pg-favicon-bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="100%" stop-color="#dcfce7"/>
+    </linearGradient>
+  </defs>
+  <!-- Matches Sidebar brand icon wrap + FaSeedling (react-icons/fa) -->
+  <rect width="512" height="512" rx="96" fill="url(#pg-favicon-bg)" stroke="#bbf7d0" stroke-width="12"/>
+  <path
+    fill="#16a34a"
+    d="M64 96H0c0 123.7 100.3 224 224 224v144c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V320C288 196.3 187.7 96 64 96zm384-64c-84.2 0-157.4 46.5-195.7 115.2 27.7 30.2 48.2 66.9 59 107.6C424 243.1 512 147.9 512 32h-64z"
+  />
 </svg>
