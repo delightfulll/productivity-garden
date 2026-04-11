@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { tasksApi, type Task } from "../lib/api";
@@ -23,13 +29,10 @@ import GoalFocus from "../components/GoalFocus";
 import { playTaskCompleteSound } from "../lib/taskCompleteSound";
 import { useConfirm, useConfirmDeletion } from "../context/ConfirmContext";
 import { useDayParam } from "../hooks/useDayParam";
-import {
-  taskBelongsOnDay,
-  parseLocalDayKey,
-} from "../lib/dateUtils";
+import { taskBelongsOnDay, parseLocalDayKey } from "../lib/dateUtils";
+import { useAuth } from "../context/AuthContext";
 
 type ActiveTab = "tasks" | "goals" | "backlog";
-
 interface TaskItemProps {
   task: Task;
   category: string;
@@ -245,6 +248,7 @@ const TaskSection = React.memo(
 );
 
 function Home() {
+  const { user } = useAuth();
   const { refreshStats } = useStats();
   const { confirmDeletion } = useConfirmDeletion();
   const { confirm } = useConfirm();
@@ -437,7 +441,7 @@ function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                Welcome Back, Vinay 🌱
+                Welcome Back, {user?.name ?? "Guest"} 🌱
               </motion.h2>
               <motion.p
                 className="welcome-subtitle"

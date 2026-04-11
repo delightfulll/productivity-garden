@@ -1,9 +1,14 @@
--- Run this file once to set up your database schema:
+-- Run once to create all tables (Cloud SQL, local Postgres, etc.):
 --   psql -U <your_user> -d <your_database> -f backend/db/schema.sql
+--
+-- The API also runs small idempotent ensure_* steps on startup for older DBs.
 
 CREATE TABLE IF NOT EXISTS users (
   id           SERIAL PRIMARY KEY,
   name         VARCHAR(100)  NOT NULL,
+  email        VARCHAR(255)  UNIQUE NOT NULL DEFAULT '',
+  password_hash TEXT         NOT NULL DEFAULT '',
+  last_activity_date DATE,
   bio          TEXT          DEFAULT '',
   focus_areas  TEXT[]        DEFAULT '{}',
   streak       INTEGER       DEFAULT 0,

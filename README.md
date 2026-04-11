@@ -69,7 +69,7 @@ productivity-garden/
 │   └── App.tsx
 ├── backend/
 │   ├── routes/         # tasks, users, auth, goals, journal, wins, …
-│   ├── db/             # Pool, schema, migrations, XP helpers
+│   ├── db/             # Pool, schema.sql, XP helpers
 │   ├── middleware/     # auth
 │   ├── Dockerfile      # API container
 │   └── api.ts          # Express entry
