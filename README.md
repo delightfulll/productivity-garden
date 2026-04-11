@@ -6,16 +6,15 @@ A productivity app I made because goalsumo got shut down and notion wasn't cutti
 
 ## Features
 
-| Feature              | Description                                                           |
-| -------------------- | --------------------------------------------------------------------- |
-| **Task categories**  | Watering, Sunlight, and Composting columns with drag-and-drop reorder |
-| **Day-aware tasks**  | Tasks tied to calendar days; roll over to the next day                |
-| **Goals & backlog**  | Goals, backlog, and milestone-style journey views                     |
-| **Calendar**         | Month view and time blocking                                          |
-| **Journal & wins**   | Daily journal entries and wins tracking                               |
-| **Focus & recovery** | Timer/focus tools and addictions/recovery screens                     |
-| **Progress**         | XP, levels, streaks, and profile stats                                |
-| **Auth**             | Register, login, and JWT-based sessions                               |
+| Feature              | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Task categories**  | Watering, Sunlight, and Composting columns that represent task importance |
+| **Day-aware tasks**  | Tasks tied to calendar days                                               |
+| **Goals & backlog**  | Goals, backlog, and milestone-style journey views                         |
+| **Calendar**         | Month view and Daily View                                                 |
+| **Journal & wins**   | Daily journal entries and wins tracking                                   |
+| **Focus & recovery** | Pomodero Timer and addiction recovery checkin's                           |
+| **Progress**         | XP, levels, streaks, and profile stats to keep track of progress          |
 
 ---
 
