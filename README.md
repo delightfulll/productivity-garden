@@ -1,8 +1,8 @@
-# Productivity Garden
+# 🌱 Productivity Garden
 
 A productivity app I made because goalsumo got shut down and notion wasn't cutting it.
 
----
+## **https://productivity-garden-pi.vercel.app/login**
 
 ## Features
 
@@ -21,17 +21,12 @@ A productivity app I made because goalsumo got shut down and notion wasn't cutti
 
 ## Deployment architecture
 
-| Layer                | Service                                        | Role                                                                                                                                                 |
-| -------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**         | [Vercel](https://vercel.com)                   | Hosts the Vite/React app (static build, CDN, HTTPS). Connects to your Git repo for automatic deploys on push.                                        |
-| **Backend API**      | **Google Cloud Run** (recommended)             | Runs the Express API from the Docker image built in this repo. Scales to zero, HTTPS URL, `PORT` injected automatically.                             |
-| **Container images** | **Artifact Registry**                          | Stores the backend Docker image produced by the build pipeline.                                                                                      |
-| **Build pipeline**   | **Cloud Build**                                | `cloudbuild.yaml` builds `backend/Dockerfile` and pushes the image to Artifact Registry (substitute your image name and run `gcloud builds submit`). |
-| **Database**         | **Cloud SQL for PostgreSQL** (or any Postgres) | The API expects PostgreSQL via `DB_*` env vars. Cloud SQL is the usual choice on GCP; use Secret Manager for credentials.                            |
-
-**Frontend environment:** set `VITE_API_BASE_URL` in Vercel to your API’s public URL (no trailing slash), e.g. `https://your-service-xxxxx.run.app`, then redeploy so the client bundle points at production.
-
-**Backend environment:** use `backend/.env.example` as a template (`PORT`, `DB_*`, `JWT_SECRET`). On Cloud Run, prefer Secret Manager for secrets and wire them as environment variables or mounted secrets.
+| Layer                | Service                      | Role                                                                                |
+| -------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| **Frontend**         | **Vercel**                   | Hosts the Frontend(clientside)                                                      |
+| **Backend API**      | **Google Cloud Run**         | Runs the Express API from the Docker image built                                    |
+| **Container images** | **Artifact Registry**        | Build and depoloy the dockerimage into artificat registery, then ran with cloud run |
+| **Database**         | **Cloud SQL for PostgreSQL** | Database deployed via CloudSQL                                                      |
 
 ---
 
@@ -39,23 +34,25 @@ A productivity app I made because goalsumo got shut down and notion wasn't cutti
 
 ### Frontend
 
-| Technology          | Purpose                         |
-| ------------------- | ------------------------------- |
-| **React**           | UI                              |
-| **TypeScript**      | Typechecking Language           |
-| **Vite**            | Dev server and production build |
-| **Tailwind CSS v4** | Styling                         |
-| **Framer Motion**   | Animations and reorder          |
-| **React Router**    | Client-side routing             |
+| Technology          | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
+| **React**           | UI                                             |
+| **TypeScript**      | Programming Language with static type checking |
+| **Vite**            | Dev server and production build                |
+| **Tailwind CSS v4** | Styling                                        |
+| **Framer Motion**   | Animations and reorder                         |
+| **React Router**    | Client-side routing                            |
 
 ### Backend
 
-| Technology            | Purpose               |
-| --------------------- | --------------------- |
-| **Node.js + Express** | REST API              |
-| **TypeScript**        | Typechecking Language |
-| **PostgreSQL**        | Database              |
-| **JWT + bcrypt**      | Auth                  |
+| Technology            | Purpose                            |
+| --------------------- | ---------------------------------- |
+| **Node.js + Express** | REST API                           |
+| **TypeScript**        | Typechecking Language              |
+| **PostgreSQL**        | Database                           |
+| **JWT + bcrypt**      | Auth                               |
+| **Google Cloud**      | Cloud Deployment                   |
+| **Docker**            | Containerization and Orchestration |
 
 ---
 
@@ -75,10 +72,8 @@ productivity-garden/
 │   ├── routes/         # tasks, users, auth, goals, journal, wins, …
 │   ├── db/             # Pool, schema, migrations, XP helpers
 │   ├── middleware/     # auth
-│   ├── Dockerfile      # API container for Cloud Run / local Docker
+│   ├── Dockerfile      # API container
 │   └── api.ts          # Express entry
-├── cloudbuild.yaml     # GCP Cloud Build → Artifact Registry
-├── docker-compose.yml  # Optional: run API container locally
 ├── vercel.json         # SPA fallback for client-side routes
 └── vite.config.js      # React + Tailwind plugins (must be in git for Vercel)
 ```
