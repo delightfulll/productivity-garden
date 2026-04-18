@@ -8,7 +8,7 @@ import React, {
 import "../styles/App.css";
 import Sidebar from "../components/Sidebar";
 import { tasksApi, type Task } from "../lib/api";
-import { motion, Reorder, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, Reorder, AnimatePresence } from "framer-motion";
 import {
   FaPlus,
   FaGripVertical,
@@ -199,49 +199,47 @@ const TaskSection = React.memo(
           <h2 className={`section-title section-title-${category}`}>{title}</h2>
         </div>
         <p className="section-subtitle">{subtitle}</p>
-        <LayoutGroup id={category}>
-          <Reorder.Group
-            axis="y"
-            values={tasks}
-            onReorder={onReorder}
-            className="task-box"
-            layoutScroll
+        <Reorder.Group
+          axis="y"
+          values={tasks}
+          onReorder={onReorder}
+          className="task-box"
+        >
+          <AnimatePresence initial={false} mode="popLayout">
+            {tasks.map((task) => (
+              <Reorder.Item
+                key={task.id}
+                value={task}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileDrag={{
+                  scale: 1.03,
+                  boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+                }}
+                transition={{ duration: 0.18, layout: { duration: 0 } }}
+              >
+                <TaskItem
+                  task={task}
+                  category={category}
+                  onComplete={onComplete}
+                  onDelete={onDelete}
+                  onRollOver={onRollOver}
+                  taskRefs={taskRefs}
+                />
+              </Reorder.Item>
+            ))}
+          </AnimatePresence>
+          <motion.div
+            className="add-task-card"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onAddClick(category)}
           >
-            <AnimatePresence mode="popLayout">
-              {tasks.map((task) => (
-                <Reorder.Item
-                  key={task.id}
-                  value={task}
-                  whileDrag={{
-                    scale: 1.03,
-                    boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <TaskItem
-                    task={task}
-                    category={category}
-                    onComplete={onComplete}
-                    onDelete={onDelete}
-                    onRollOver={onRollOver}
-                    taskRefs={taskRefs}
-                  />
-                </Reorder.Item>
-              ))}
-            </AnimatePresence>
-            <motion.div
-              className="add-task-card"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onAddClick(category)}
-            >
-              <FaPlus className="add-task-plus" />
-              <span className="add-task-input">
-                Add a new {category} task...
-              </span>
-            </motion.div>
-          </Reorder.Group>
-        </LayoutGroup>
+            <FaPlus className="add-task-plus" />
+            <span className="add-task-input">Add a new {category} task...</span>
+          </motion.div>
+        </Reorder.Group>
       </>
     );
   },
@@ -283,16 +281,23 @@ function Home() {
     [],
   );
 
-  // Load tasks from API on mount
+  // Load tasks from API on mount, auto-rolling over any incomplete past-dated tasks first
   useEffect(() => {
     tasksApi
-      .list()
-      .then((all) => {
-        setWateringTasks(all.filter((t) => t.category === "watering"));
-        setSunlightTasks(all.filter((t) => t.category === "sunlight"));
-        setCompostingTasks(all.filter((t) => t.category === "composting"));
+      .autoRollover()
+      .catch(() => {
+        /* non-fatal: proceed to load regardless */
       })
-      .catch((err) => console.error("Failed to load tasks:", err));
+      .finally(() => {
+        tasksApi
+          .list()
+          .then((all) => {
+            setWateringTasks(all.filter((t) => t.category === "watering"));
+            setSunlightTasks(all.filter((t) => t.category === "sunlight"));
+            setCompostingTasks(all.filter((t) => t.category === "composting"));
+          })
+          .catch((err) => console.error("Failed to load tasks:", err));
+      });
   }, []);
 
   const handleTaskComplete = useCallback(
@@ -393,8 +398,7 @@ function Home() {
       if (
         !(await confirm({
           title: "Roll over to next day?",
-          message:
-            "This task moves to the next calendar day. Any other tasks already on that day in this category will be removed.",
+          message: "This task will be moved to the next calendar day.",
           confirmLabel: "Roll over",
         }))
       ) {

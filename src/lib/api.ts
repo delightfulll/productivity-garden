@@ -99,6 +99,8 @@ export const tasksApi = {
     request<{ message: string }>(`/api/tasks/${id}`, { method: "DELETE" }),
   rollover: (id: number) =>
     request<Task>(`/api/tasks/${id}/rollover`, { method: "POST" }),
+  autoRollover: () =>
+    request<Task[]>("/api/tasks/auto-rollover", { method: "POST" }),
 };
 
 // ── Goals ─────────────────────────────────────────────────────

@@ -101,9 +101,38 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/tasks/auto-rollover  (Authorization: Bearer — user id from token)
+// Moves all incomplete past-dated tasks for the user to today's date.
+router.post("/auto-rollover", requireAuth, async (req: AuthRequest, res: Response) => {
+  const uid = req.userId;
+
+  if (!uid) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const todayKey = formatLocalDate(new Date());
+
+  try {
+    const result = await pool.query(
+      `UPDATE tasks
+       SET date = $1
+       WHERE user_id = $2
+         AND completed = FALSE
+         AND date ~ '^\\d{4}-\\d{2}-\\d{2}$'
+         AND date < $1
+       RETURNING *`,
+      [todayKey, uid],
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("POST /tasks/auto-rollover error:", err);
+    res.status(500).json({ error: "Failed to auto-rollover tasks" });
+  }
+});
+
 // POST /api/tasks/:id/rollover  (Authorization: Bearer — user id from token)
-// Moves task to the next calendar day; clears other tasks on that day in the same category
-// so the destination day starts with only this task.
+// Moves task to the next calendar day, keeping all other tasks on that day intact.
 router.post("/:id/rollover", requireAuth, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const uid = req.userId;
@@ -119,35 +148,21 @@ router.post("/:id/rollover", requireAuth, async (req: AuthRequest, res: Response
     return;
   }
 
-  const client = await pool.connect();
   try {
-    await client.query("BEGIN");
-
-    const found = await client.query(
+    const found = await pool.query(
       "SELECT * FROM tasks WHERE id = $1 AND user_id = $2",
       [taskId, uid],
     );
     if (!found.rows?.length) {
-      await client.query("ROLLBACK");
       res.status(404).json({ error: "Task not found" });
       return;
     }
 
-    const task = found.rows[0] as {
-      category: string;
-      date: string;
-    };
-
+    const task = found.rows[0] as { date: string };
     const fromKey = normalizeTaskDate(task.date);
     const destKey = nextDayKey(fromKey);
 
-    await client.query(
-      `DELETE FROM tasks
-       WHERE user_id = $1 AND category = $2 AND date = $3 AND id != $4`,
-      [uid, task.category, destKey, taskId],
-    );
-
-    const updated = await client.query(
+    const updated = await pool.query(
       `UPDATE tasks
        SET date = $1, sort_order = 0, completed = false
        WHERE id = $2
@@ -155,18 +170,10 @@ router.post("/:id/rollover", requireAuth, async (req: AuthRequest, res: Response
       [destKey, taskId],
     );
 
-    await client.query("COMMIT");
     res.json(updated.rows[0]);
   } catch (err) {
-    try {
-      await client.query("ROLLBACK");
-    } catch {
-      /* ignore */
-    }
     console.error("POST /tasks/:id/rollover error:", err);
     res.status(500).json({ error: "Failed to roll task over" });
-  } finally {
-    client.release();
   }
 });
 

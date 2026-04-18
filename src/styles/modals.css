@@ -52,6 +52,7 @@
   width: 90%;
   max-width: 500px;
   position: relative;
+  will-change: transform, opacity;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -155,15 +156,6 @@
 }
 
 /* ── Confirm (in-app) — matches sidebar / garden theme ───────── */
-@keyframes confirmOverlayIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes confirmPanelIn {
   from {
     opacity: 0;
@@ -179,7 +171,8 @@
   @apply fixed inset-0 flex items-center justify-center;
   z-index: 10050;
   padding: 1rem;
-  animation: confirmOverlayIn 0.22s ease-out;
+  /* Overlay appears instantly — animating opacity while backdrop-filter is
+     active forces per-frame blur recomposition which tanks frame rate. */
 }
 
 .confirm-modal-overlay--garden {
@@ -209,6 +202,7 @@
   border-radius: 16px;
   padding: 1.45rem 1.55rem 1.35rem 1.65rem;
   overflow: hidden;
+  will-change: transform, opacity;
   animation: confirmPanelIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow:
     0 4px 6px rgba(15, 23, 42, 0.04),
