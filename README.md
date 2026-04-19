@@ -2,7 +2,7 @@
 
 A productivity app I made because goalsumo got shut down and notion wasn't cutting it.
 
-## **https://productivity-garden-pi.vercel.app/login**
+## **https://productivity-garden-pi.vercel.app**
 
 ## Features
 
@@ -44,14 +44,15 @@ A productivity app I made because goalsumo got shut down and notion wasn't cutti
 
 ### Backend
 
-| Technology            | Purpose                            |
-| --------------------- | ---------------------------------- |
-| **Node.js + Express** | REST API                           |
-| **TypeScript**        | Typechecking Language              |
-| **PostgreSQL**        | Database                           |
-| **JWT + bcrypt**      | Auth                               |
-| **Google Cloud**      | Cloud Deployment                   |
-| **Docker**            | Containerization and Orchestration |
+| Technology            | Purpose                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| **Node.js + Express** | REST API                                                                  |
+| **TypeScript**        | Typechecking Language                                                     |
+| **PostgreSQL**        | Database                                                                  |
+| **JWT + bcrypt**      | Auth                                                                      |
+| **Google Cloud**      | Cloud Deployment                                                          |
+| **Docker**            | Containerization                                                          |
+| **Cloud Build**       | CI/CD — builds and pushes the Docker image to Artifact Registry on deploy |
 
 ---
 
@@ -72,6 +73,7 @@ productivity-garden/
 │   ├── db/             # Pool, schema.sql, XP helpers
 │   ├── middleware/     # auth
 │   ├── Dockerfile      # API container
+│   ├── cloudbuild.yaml # Cloud Build CI/CD pipeline
 │   └── api.ts          # Express entry
 ├── vercel.json         # SPA fallback for client-side routes
 └── vite.config.js      # React + Tailwind plugins (must be in git for Vercel)

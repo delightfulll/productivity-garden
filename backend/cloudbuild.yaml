@@ -1,0 +1,41 @@
+steps:
+  # Build the Docker image (context = backend/, Dockerfile lives there)
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - "-t"
+      - "$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:$COMMIT_SHA"
+      - "-t"
+      - "$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:latest"
+      - "-f"
+      - "backend/Dockerfile"
+      - "backend"
+
+  # Push both tags
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - push
+      - "--all-tags"
+      - "$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE"
+
+  # Deploy to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - "$_SERVICE"
+      - "--image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:$COMMIT_SHA"
+      - "--region=$_REGION"
+      - "--platform=managed"
+      - "--allow-unauthenticated"
+      - "--add-cloudsql-instances=$PROJECT_ID:$_REGION:$_SQL_INSTANCE"
+
+substitutions:
+  _REGION: us-central1
+  _REPO: productivity-garden
+  _SERVICE: productivity-garden-api
+  _SQL_INSTANCE: productivity-garden-db   # your Cloud SQL instance name
+
+images:
+  - "$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE"

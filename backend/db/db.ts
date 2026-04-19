@@ -3,12 +3,18 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Cloud Run connects to Cloud SQL via a Unix socket injected by the Auth Proxy.
+// Locally, fall back to standard TCP host/port.
 const pool = new Pool({
   user: process.env.DB_USER,
-  host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432"),
+  ...(process.env.INSTANCE_UNIX_SOCKET
+    ? { host: process.env.INSTANCE_UNIX_SOCKET }
+    : {
+        host: process.env.DB_HOST || "localhost",
+        port: parseInt(process.env.DB_PORT || "5432"),
+      }),
 });
 
 /** Creates milestones table if missing (older DBs may not have run the migration). */

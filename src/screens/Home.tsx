@@ -43,7 +43,7 @@ interface TaskItemProps {
   ) => void;
   onDelete: (taskId: number, category: string) => void;
   onRollOver: (taskId: number, category: string) => void;
-  taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
+  taskRefs: React.RefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
 function TaskItem({
