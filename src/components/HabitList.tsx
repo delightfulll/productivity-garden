@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import {
   habitsApi,
@@ -13,6 +20,10 @@ interface HabitListProps {
   endDateKey?: string;
   title?: string;
   subtitle?: string;
+  showAddHabit?: boolean;
+  showDelete?: boolean;
+  compact?: boolean;
+  emptyMessage?: string;
 }
 
 type HabitChoice = HabitEntryStatus | null;
@@ -54,7 +65,16 @@ function entryForDay(habit: Habit, dayKey: string): HabitEntry | undefined {
   return habit.entries.find((entry) => entry.entry_date === dayKey);
 }
 
-function HabitList({ endDateKey, title = "Habit Tracker", subtitle }: HabitListProps) {
+function HabitList({
+  endDateKey,
+  title = "Habit Tracker",
+  subtitle,
+  showAddHabit = true,
+  showDelete = true,
+  compact = false,
+  emptyMessage = "No habits yet. Add one above to start tracking your week.",
+}: HabitListProps) {
+  const sectionTitleId = useId();
   const rangeEndKey = endDateKey ?? formatLocalDayKey(new Date());
   const dayKeys = useMemo(() => getSevenDayKeys(rangeEndKey), [rangeEndKey]);
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -157,42 +177,51 @@ function HabitList({ endDateKey, title = "Habit Tracker", subtitle }: HabitListP
   );
 
   return (
-    <section className="habit-section" aria-labelledby="habit-section-title">
-      <div className="habit-header">
-        <div>
-          <h2 id="habit-section-title" className="section-title section-title-watering">
-            {title}
-          </h2>
-          {subtitle && <p className="section-subtitle">{subtitle}</p>}
+    <section
+      className={`habit-section ${compact ? "habit-section-compact" : ""}`}
+      aria-labelledby={title ? sectionTitleId : undefined}
+    >
+      {(title || subtitle) && (
+        <div className="habit-header">
+          <div>
+            {title && (
+              <h2 id={sectionTitleId} className="section-title section-title-watering">
+                {title}
+              </h2>
+            )}
+            {subtitle && <p className="section-subtitle">{subtitle}</p>}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="habit-add-card">
-        <FaPlus className="add-task-plus" aria-hidden />
-        <input
-          className="habit-add-input"
-          value={newHabitName}
-          onChange={(event) => setNewHabitName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              void handleCreateHabit();
-            }
-          }}
-          placeholder="Add a habit to track..."
-          aria-label="New habit name"
-        />
-        <button
-          type="button"
-          className="habit-add-button"
-          onClick={() => void handleCreateHabit()}
-        >
-          Add Habit
-        </button>
-      </div>
+      {showAddHabit && (
+        <div className="habit-add-card">
+          <FaPlus className="add-task-plus" aria-hidden />
+          <input
+            className="habit-add-input"
+            value={newHabitName}
+            onChange={(event) => setNewHabitName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                void handleCreateHabit();
+              }
+            }}
+            placeholder="Add a habit to track..."
+            aria-label="New habit name"
+          />
+          <button
+            type="button"
+            className="habit-add-button"
+            onClick={() => void handleCreateHabit()}
+          >
+            Add Habit
+          </button>
+        </div>
+      )}
 
       {habits.length === 0 ? (
         <div className="habit-empty-card">
-          <p>No habits yet. Add one above to start tracking your week.</p>
+          <p>{emptyMessage}</p>
         </div>
       ) : (
         <div className="habit-list">
@@ -200,14 +229,16 @@ function HabitList({ endDateKey, title = "Habit Tracker", subtitle }: HabitListP
             <article key={habit.id} className="habit-card">
               <div className="habit-card-top">
                 <h3 className="habit-name">{habit.name}</h3>
-                <button
-                  type="button"
-                  className="habit-delete-button"
-                  onClick={() => void handleDeleteHabit(habit.id)}
-                  aria-label={`Delete ${habit.name}`}
-                >
-                  <FaTrash aria-hidden />
-                </button>
+                {showDelete && (
+                  <button
+                    type="button"
+                    className="habit-delete-button"
+                    onClick={() => void handleDeleteHabit(habit.id)}
+                    aria-label={`Delete ${habit.name}`}
+                  >
+                    <FaTrash aria-hidden />
+                  </button>
+                )}
               </div>
 
               <div className="habit-days" aria-label={`${habit.name} last seven days`}>

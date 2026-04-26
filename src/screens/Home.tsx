@@ -582,6 +582,15 @@ function Home() {
         <XPBar />
         <CustomCalendar />
         <GoalFocus />
+        <HabitList
+          endDateKey={dayKey}
+          title="Habits"
+          subtitle="Last seven days"
+          showAddHabit={false}
+          showDelete={false}
+          compact
+          emptyMessage="No habits yet. Add one from the Habits tab."
+        />
       </div>
 
       <Modal

@@ -272,28 +272,45 @@ export interface Habit {
   entries: HabitEntry[];
 }
 
+export interface ClearedHabitEntry {
+  habit_id: number;
+  entry_date: string;
+  status: null;
+}
+
+function normalizeHabitEntry<T extends { entry_date: string }>(entry: T): T {
+  return { ...entry, entry_date: entry.entry_date.slice(0, 10) };
+}
+
+function normalizeHabit(habit: Habit): Habit {
+  return {
+    ...habit,
+    entries: habit.entries.map(normalizeHabitEntry),
+  };
+}
+
 export const habitsApi = {
   list: (startDate?: string, endDate?: string) =>
     request<Habit[]>(
       `/api/habits?userId=${getUserId()}${startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : ""}`,
-    ),
+    ).then((habits) => habits.map(normalizeHabit)),
   create: (name: string) =>
     request<Habit>("/api/habits", {
       method: "POST",
       body: JSON.stringify({ user_id: getUserId(), name }),
-    }),
+    }).then(normalizeHabit),
   setEntry: (
     habitId: number,
     entry_date: string,
     status: HabitEntryStatus | null,
   ) =>
-    request<HabitEntry | { habit_id: number; entry_date: string; status: null }>(
+    request<HabitEntry | ClearedHabitEntry>(
       `/api/habits/${habitId}/entries`,
       {
         method: "PUT",
         body: JSON.stringify({ entry_date, status }),
       },
-    ),
+    ).then(normalizeHabitEntry),
   delete: (id: number) =>
     request<{ message: string }>(`/api/habits/${id}`, { method: "DELETE" }),
 };

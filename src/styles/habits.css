@@ -5,6 +5,12 @@
   gap: 1rem;
 }
 
+.habit-section-compact {
+  width: 100%;
+  box-sizing: border-box;
+  gap: 0.75rem;
+}
+
 .habit-header {
   display: flex;
   align-items: flex-start;
@@ -79,6 +85,10 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.habit-section-compact .habit-card {
+  padding: 0.85rem;
+}
+
 .habit-card:hover {
   border-color: transparent;
   background: linear-gradient(#fff, #fff) padding-box, var(--pg-hover-border-gradient) border-box;
@@ -92,6 +102,10 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.95rem;
+}
+
+.habit-section-compact .habit-card-top {
+  margin-bottom: 0.75rem;
 }
 
 .habit-name {
@@ -124,6 +138,11 @@
   gap: 0.65rem;
 }
 
+.habit-section-compact .habit-days {
+  grid-template-columns: repeat(7, minmax(1.75rem, 1fr));
+  gap: 0.35rem;
+}
+
 .habit-day {
   align-items: center;
   display: flex;
@@ -139,6 +158,11 @@
   height: 2.15rem;
   width: 2.15rem;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.habit-section-compact .habit-circle {
+  height: 1.65rem;
+  width: 1.65rem;
 }
 
 .habit-circle:hover,
@@ -166,6 +190,10 @@
   color: #6b7280;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.habit-section-compact .habit-day-label {
+  font-size: 0.65rem;
 }
 
 .habit-status-menu {
