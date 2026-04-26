@@ -22,7 +22,7 @@
 }
 
 .task-item.task-completed {
-  @apply border-green-200 shadow-sm;
+  @apply border-green-200;
 }
 
 /* Sweeps left → right on complete; drains on uncomplete — matches bg-green-50 */

@@ -34,16 +34,18 @@ import { taskBelongsOnDay, parseLocalDayKey } from "../lib/dateUtils";
 import { useAuth } from "../context/AuthContext";
 
 type ActiveTab = "tasks" | "habits" | "goals" | "backlog";
+type TaskCategory = "watering" | "sunlight" | "composting";
+
 interface TaskItemProps {
   task: Task;
-  category: string;
+  category: TaskCategory;
   onComplete: (
     taskId: number,
-    category: string,
+    category: TaskCategory,
     currentCompleted: boolean,
   ) => void;
-  onDelete: (taskId: number, category: string) => void;
-  onRollOver: (taskId: number, category: string) => void;
+  onDelete: (taskId: number, category: TaskCategory) => void;
+  onRollOver: (taskId: number, category: TaskCategory) => void;
   taskRefs: React.RefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
@@ -165,16 +167,18 @@ interface TaskSectionProps {
   title: string;
   subtitle: string;
   tasks: Task[];
-  category: "watering" | "sunlight" | "composting";
+  category: TaskCategory;
+  layoutAnimationCategory: TaskCategory | null;
+  onActivateLayout: (category: TaskCategory) => void;
   onReorder: (newOrder: Task[]) => void;
   onComplete: (
     taskId: number,
-    category: string,
+    category: TaskCategory,
     currentCompleted: boolean,
   ) => void;
-  onDelete: (taskId: number, category: string) => void;
-  onRollOver: (taskId: number, category: string) => void;
-  onAddClick: (category: "watering" | "sunlight" | "composting") => void;
+  onDelete: (taskId: number, category: TaskCategory) => void;
+  onRollOver: (taskId: number, category: TaskCategory) => void;
+  onAddClick: (category: TaskCategory) => void;
   taskRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
 }
 
@@ -184,6 +188,8 @@ const TaskSection = React.memo(
     subtitle,
     tasks,
     category,
+    layoutAnimationCategory,
+    onActivateLayout,
     onReorder,
     onComplete,
     onDelete,
@@ -191,6 +197,8 @@ const TaskSection = React.memo(
     onAddClick,
     taskRefs,
   }: TaskSectionProps) => {
+    const shouldAnimateLayout = layoutAnimationCategory === category;
+
     return (
       <>
         <div
@@ -205,6 +213,7 @@ const TaskSection = React.memo(
           values={tasks}
           onReorder={onReorder}
           className="task-box"
+          onPointerDownCapture={() => onActivateLayout(category)}
         >
           <AnimatePresence initial={false} mode="popLayout">
             {tasks.map((task) => (
@@ -214,11 +223,18 @@ const TaskSection = React.memo(
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
+                layout={shouldAnimateLayout ? "position" : undefined}
                 whileDrag={{
                   scale: 1.03,
-                  boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
                 }}
-                transition={{ duration: 0.18, layout: { duration: 0 } }}
+                transition={{
+                  opacity: { duration: 0.18 },
+                  scale: { duration: 0.18 },
+                  layout: {
+                    duration: 0.28,
+                    ease: [0.22, 1, 0.36, 1],
+                  },
+                }}
               >
                 <TaskItem
                   task={task}
@@ -253,6 +269,8 @@ function Home() {
   const { confirm } = useConfirm();
   const { dayKey, selectedDate, setDayFromDate } = useDayParam();
   const [activeTab, setActiveTab] = useState<ActiveTab>("tasks");
+  const [layoutAnimationCategory, setLayoutAnimationCategory] =
+    useState<TaskCategory | null>(null);
   const taskRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   const [wateringTasks, setWateringTasks] = useState<Task[]>([]);
@@ -302,7 +320,7 @@ function Home() {
   }, []);
 
   const handleTaskComplete = useCallback(
-    (taskId: number, category: string, currentCompleted: boolean) => {
+    (taskId: number, category: TaskCategory, currentCompleted: boolean) => {
       const newCompleted = !currentCompleted;
 
       const updateTasks = (tasks: Task[]) =>
@@ -336,9 +354,9 @@ function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskText, setNewTaskText] = useState("");
   const [newTaskDate, setNewTaskDate] = useState("");
-  const [activeCategory, setActiveCategory] = useState<
-    "watering" | "sunlight" | "composting" | null
-  >(null);
+  const [activeCategory, setActiveCategory] = useState<TaskCategory | null>(
+    null,
+  );
 
   const handleAddTask = useCallback(async () => {
     if (!newTaskText.trim() || !activeCategory) return;
@@ -349,6 +367,8 @@ function Home() {
         date: newTaskDate.trim() || dayKey,
         category: activeCategory,
       });
+
+      setLayoutAnimationCategory(activeCategory);
 
       switch (activeCategory) {
         case "watering":
@@ -372,8 +392,9 @@ function Home() {
   }, [newTaskText, newTaskDate, activeCategory, dayKey]);
 
   const handleDeleteTask = useCallback(
-    async (taskId: number, category: string) => {
+    async (taskId: number, category: TaskCategory) => {
       if (!(await confirmDeletion("Delete this task?"))) return;
+      setLayoutAnimationCategory(category);
       switch (category) {
         case "watering":
           setWateringTasks((t) => t.filter((x) => x.id !== taskId));
@@ -395,7 +416,7 @@ function Home() {
   );
 
   const handleRollOverTask = useCallback(
-    async (taskId: number, _category: string) => {
+    async (taskId: number, _category: TaskCategory) => {
       if (
         !(await confirm({
           title: "Roll over to next day?",
@@ -423,7 +444,7 @@ function Home() {
   );
 
   const openAddTaskModal = useCallback(
-    (category: "watering" | "sunlight" | "composting") => {
+    (category: TaskCategory) => {
       setActiveCategory(category);
       setNewTaskDate(dayKey);
       setIsModalOpen(true);
@@ -474,15 +495,17 @@ function Home() {
 
           {/* Tab Navigation */}
           <div className="home-tabs">
-            {(["tasks", "habits", "goals", "backlog"] as ActiveTab[]).map((tab) => (
-              <button
-                key={tab}
-                className={`home-tab-btn ${activeTab === tab ? "home-tab-active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            {(["tasks", "habits", "goals", "backlog"] as ActiveTab[]).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  className={`home-tab-btn ${activeTab === tab ? "home-tab-active" : ""}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ),
+            )}
           </div>
 
           {/* Tab Content */}
@@ -493,7 +516,12 @@ function Home() {
                 title="Watering Tasks"
                 subtitle="These tasks move the needle"
                 tasks={wateringForDay}
-                onReorder={(next) => mergeReorder(setWateringTasks, next)}
+                layoutAnimationCategory={layoutAnimationCategory}
+                onActivateLayout={setLayoutAnimationCategory}
+                onReorder={(next) => {
+                  setLayoutAnimationCategory("watering");
+                  mergeReorder(setWateringTasks, next);
+                }}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
                 onRollOver={handleRollOverTask}
@@ -505,7 +533,12 @@ function Home() {
                 subtitle="These tasks keep your goal alive"
                 tasks={sunlightForDay}
                 category="sunlight"
-                onReorder={(next) => mergeReorder(setSunlightTasks, next)}
+                layoutAnimationCategory={layoutAnimationCategory}
+                onActivateLayout={setLayoutAnimationCategory}
+                onReorder={(next) => {
+                  setLayoutAnimationCategory("sunlight");
+                  mergeReorder(setSunlightTasks, next);
+                }}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
                 onRollOver={handleRollOverTask}
@@ -517,7 +550,12 @@ function Home() {
                 subtitle="These tasks are extraneous things not necessarily important"
                 tasks={compostingForDay}
                 category="composting"
-                onReorder={(next) => mergeReorder(setCompostingTasks, next)}
+                layoutAnimationCategory={layoutAnimationCategory}
+                onActivateLayout={setLayoutAnimationCategory}
+                onReorder={(next) => {
+                  setLayoutAnimationCategory("composting");
+                  mergeReorder(setCompostingTasks, next);
+                }}
                 onComplete={handleTaskComplete}
                 onDelete={handleDeleteTask}
                 onRollOver={handleRollOverTask}
