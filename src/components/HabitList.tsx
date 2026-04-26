@@ -13,6 +13,7 @@ import {
   type HabitEntry,
   type HabitEntryStatus,
 } from "../lib/api";
+import { useConfirmDeletion } from "../context/ConfirmContext";
 import { formatLocalDayKey, parseLocalDayKey } from "../lib/dateUtils";
 import "../styles/habits.css";
 
@@ -74,6 +75,7 @@ function HabitList({
   compact = false,
   emptyMessage = "No habits yet. Add one above to start tracking your week.",
 }: HabitListProps) {
+  const { confirmDeletion } = useConfirmDeletion();
   const sectionTitleId = useId();
   const rangeEndKey = endDateKey ?? formatLocalDayKey(new Date());
   const dayKeys = useMemo(() => getSevenDayKeys(rangeEndKey), [rangeEndKey]);
@@ -116,14 +118,23 @@ function HabitList({
     }
   }, [newHabitName]);
 
-  const handleDeleteHabit = useCallback(async (habitId: number) => {
-    setHabits((current) => current.filter((habit) => habit.id !== habitId));
-    try {
-      await habitsApi.delete(habitId);
-    } catch (err) {
-      console.error("Failed to delete habit:", err);
-    }
-  }, []);
+  const handleDeleteHabit = useCallback(
+    async (habit: Habit) => {
+      if (
+        !(await confirmDeletion(`Delete "${habit.name}" and its tracking history?`))
+      ) {
+        return;
+      }
+
+      setHabits((current) => current.filter((item) => item.id !== habit.id));
+      try {
+        await habitsApi.delete(habit.id);
+      } catch (err) {
+        console.error("Failed to delete habit:", err);
+      }
+    },
+    [confirmDeletion],
+  );
 
   const handleSetEntry = useCallback(
     async (habitId: number, dayKey: string, status: HabitChoice) => {
@@ -233,7 +244,7 @@ function HabitList({
                   <button
                     type="button"
                     className="habit-delete-button"
-                    onClick={() => void handleDeleteHabit(habit.id)}
+                    onClick={() => void handleDeleteHabit(habit)}
                     aria-label={`Delete ${habit.name}`}
                   >
                     <FaTrash aria-hidden />
